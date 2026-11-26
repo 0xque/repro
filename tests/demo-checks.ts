@@ -50,6 +50,13 @@ for (const [result, orders] of [[played, 2], [verified, 1]] as const) {
   assert.equal(result.network, 'loopback-only');
   assert.equal(result.cleanup, 'ok');
 }
+const { stdout: compared } = await exec(process.execPath, [
+  cli, 'compare', capsulePath, resolve(root, 'play.json'), resolve(root, 'verify.json'), '--json'
+]);
+const comparison = JSON.parse(compared);
+assert.equal(comparison.status, 'FIX_VERIFIED');
+assert.equal(comparison.executed, false);
+assert.deepEqual(comparison.oracle, { name: 'order-count', expected: 1, baseline: 2, candidate: 1, delta: -1 });
 assert.equal((await stat(capsulePath)).mode & 0o777, 0o600);
 console.log('Verified capture, offline inspection, replay and fix assertions.');
 

@@ -52,6 +52,18 @@ Private drafts default to 24-hour retention. Set `REPRO_RETENTION_HOURS` between
 
 ## Supported scope
 
+### Compare a baseline and a fix
+
+Save the two JSON reports from an approved checkout demonstration, then compare them offline:
+
+```sh
+repro play checkout.repro --project ./bad --offline --approve --json > baseline.json
+repro verify checkout.repro --project ./fixed --offline --approve --json > candidate.json
+repro compare checkout.repro baseline.json candidate.json
+```
+
+`compare` validates the capsule and both reports, checks the capture revision and recipe, oracle and entry digests, and shows the first unmatched action and the change in the order-count oracle. A reported divergence is distinct from a step the report never reached. Use `--json` for a CI-friendly result; exit 0 requires a reproduced baseline and a complete verified fix on a different revision. Still failing, diverged, inconclusive and invalid inputs return 4, 5, 6 and 8 respectively. Comparison does not run a browser, contact Docker or authenticate saved reports.
+
 The only supported target is the included checkout fixture. It supports the main frame, test-ID selectors, one shipping fixture and a fixed order-count oracle. The local operator approves the image and project recipe before use. The qualified replay environments, known gaps, and measured results are in [project status](docs/STATUS.md). See the [capsule specification](docs/format/README.md) and [security model](docs/security/README.md) for the file and execution boundaries.
 
 The repository is a private, unpublished implementation. The project license decision is pending owner approval.
