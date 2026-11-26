@@ -1,88 +1,25 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="REPRO packages a repeatable software bug into a reviewed file. Explore before and after with a synthetic checkout fixture.">
-<meta name="theme-color" content="#f5f1e7">
-<link rel="canonical" href="https://repro.querencia.art/">
-<title>REPRO — Every bug should be a file</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>REPRO, a project by 0xque</title><link rel="canonical" href="https://repro.querencia.art/"><meta name="description" content="A build note on REPRO, with a synthetic checkout bug and two saved test results.">
 <style>
-:root{--paper:#f5f1e7;--ink:#20211e;--muted:#5d5e55;--rule:#b7b2a4;--coal:#222522;--rust:#96351f;--red:#a33126;--green:#176044;--mono:ui-monospace,'Cascadia Mono','DejaVu Sans Mono',Consolas,monospace;--sans:system-ui,sans-serif}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1rem}button{font:inherit}a{color:inherit;text-underline-offset:.23em}a:hover{text-decoration-thickness:2px}button:focus-visible,a:focus-visible{outline:3px solid var(--rust);outline-offset:4px}.wrap{width:min(100% - 3rem,1200px);margin-inline:auto}.label{font:700 .72rem/1.35 var(--mono);letter-spacing:.11em;text-transform:uppercase}.muted{color:var(--muted)}.skip{position:absolute;top:-6rem;background:var(--ink);color:#fff;padding:1rem;z-index:3}.skip:focus{top:0}
-header .wrap{min-height:74px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ink);gap:1rem}.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none;font-size:1.15rem;font-weight:840;letter-spacing:-.07em}.brand svg{width:27px;height:27px;flex:none}.header-nav{display:flex;align-items:center;gap:1.4rem}.header-nav a{font:650 .75rem/1.4 var(--mono);text-decoration:underline}.eyebrow{display:flex;gap:.7rem;align-items:center;margin:0 0 1.2rem}.eyebrow:before{content:"";width:8px;height:8px;background:var(--rust);display:block}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.94fr);gap:clamp(1.75rem,5.1vw,6rem);align-items:center;padding:clamp(3.2rem,7vw,6.7rem) 0 3.8rem;border-bottom:1px solid var(--ink)}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(3.1rem,7.25vw,7.05rem);letter-spacing:-.092em;line-height:.93;font-weight:830;margin-bottom:1.65rem}h1 span{display:block;color:var(--rust)}.lede{font-size:clamp(1.08rem,1.65vw,1.3rem);line-height:1.58;max-width:37ch;margin-bottom:1.9rem}.primary{display:inline-flex;background:var(--ink);color:var(--paper);padding:.78rem 1rem;gap:1.6rem;align-items:center;font:700 .8rem/1.4 var(--mono);text-decoration:none}.primary:hover{background:var(--rust)}.hero small{display:block;font-size:.76rem;margin-top:.9rem;color:var(--muted)}
-.case{margin:0;scroll-margin-top:1rem;position:relative;background:#f8f5ec;border:1px solid var(--ink);box-shadow:7px 7px 0 #dfd8c7}.case-top{background:var(--coal);color:#f1eddf;padding:12px 15px;display:flex;justify-content:space-between;gap:.8rem}.case-top span:first-child{color:#f0ad88}.case-sheet{padding:clamp(1.05rem,2.1vw,1.7rem)}.case-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem}.case-title{font-size:clamp(1.2rem,2.55vw,1.94rem);line-height:1.1;letter-spacing:-.055em;font-weight:800;margin:.31rem 0 1.2rem}.revision{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--ink);margin-bottom:1rem}.revision button{cursor:pointer;min-height:46px;text-align:left;border:0;background:transparent;color:var(--ink);padding:.65rem .7rem;font:700 .76rem/1.2 var(--mono)}.revision button+button{border-left:1px solid var(--ink)}.revision button[aria-pressed="true"]{background:var(--coal);color:var(--paper)}.revision button:hover:not([aria-pressed="true"]){background:#eae3d5}.revision button:active{background:#d6ccb8;color:var(--ink)}.receipt{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:0}.receipt div{display:grid;grid-template-columns:1.1fr 1fr;gap:1rem;padding:.62rem 0}.receipt div+div{border-top:1px dotted var(--rule)}.receipt dt,.receipt dd{margin:0;font:.78rem/1.55 var(--mono)}.receipt dd{text-align:right;font-weight:700}.receipt .rows{color:var(--red)}.receipt[data-state="fixed"] .rows{color:var(--green)}.verdict{display:flex;justify-content:space-between;gap:.7rem;align-items:baseline;margin-top:1rem}.status{font:750 .73rem var(--mono);color:var(--red);border-bottom:2px solid currentColor;padding-bottom:.22rem}.receipt[data-state="fixed"]+.verdict .status{color:var(--green)}.case-note{color:var(--muted);font-size:.77rem;line-height:1.5;max-width:49ch;margin:.8rem 0 0}
-.proof{padding:1.3rem 0;display:grid;grid-template-columns:1fr 1fr 1.05fr;gap:1rem;border-bottom:1px solid var(--ink)}.proof b{font:800 1.02rem/1.55 var(--mono);display:block}.proof span{font-size:.87rem;color:var(--muted)}.proof div+div{border-left:1px solid var(--rule);padding-left:clamp(.9rem,2vw,2rem)}.section{padding:clamp(3.5rem,7vw,5.8rem) 0;border-bottom:1px solid var(--ink);scroll-margin-top:1rem}.section-head{display:grid;grid-template-columns:minmax(9rem,.38fr) 1fr;gap:1.4rem}.section-head .label{padding-top:.4rem;color:var(--rust)}h2{font-size:clamp(2rem,4.4vw,3.7rem);line-height:1.06;letter-spacing:-.079em;margin-bottom:1rem}.section-head p:not(.label){max-width:55ch;line-height:1.65;color:var(--muted)}
-.steps{margin:2rem 0 0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}.steps li{padding:1.05rem 1.2rem 1.35rem 0}.steps li+li{padding-left:1.2rem;border-left:1px solid var(--rule)}.steps .label{color:var(--rust)}.steps h3{font-size:1.28rem;letter-spacing:-.045em;margin:.6rem 0 .38rem}.steps p{font-size:.93rem;color:var(--muted);line-height:1.55;margin-bottom:0;max-width:26ch}
-.scope{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.4rem,4vw,4rem);margin-top:2rem}.scope h3{font-size:1.1rem;border-top:1px solid var(--ink);padding-top:.8rem;margin-bottom:.45rem;letter-spacing:-.04em}.scope p{font-size:.93rem;color:var(--muted);line-height:1.62;max-width:48ch}.inline-code{font:.86em var(--mono)}footer .wrap{padding:1.55rem 0 2.5rem;display:flex;justify-content:space-between;gap:1rem}footer p{margin:0;color:var(--muted);font-size:.8rem}footer a{font:700 .73rem var(--mono)}
-@media(max-width:800px){.hero{grid-template-columns:1fr;gap:2rem;padding-bottom:2.8rem}.hero-copy{max-width:560px}.case{max-width:600px}.section-head{grid-template-columns:1fr;gap:.35rem}.section-head .label{margin-bottom:.15rem}}
-@media(max-width:500px){.wrap{width:calc(100% - 1.6rem)}header .wrap{min-height:63px}.header-nav{gap:.75rem}h1{font-size:clamp(2.8rem,15vw,4.1rem)}.proof{gap:.6rem}.proof b{font-size:.84rem}.proof span{font-size:.74rem}.proof div+div{padding-left:.65rem}.steps,.scope{grid-template-columns:1fr}.steps li+li{padding-left:0;border-left:0;border-top:1px solid var(--rule)}.steps p{max-width:43ch}.scope{gap:.7rem}.case{box-shadow:4px 4px 0 #dfd8c7}.revision button{font-size:.69rem}}
-</style>
-</head>
-<body>
-<a href="#main" class="skip">Skip to content</a>
-<header><div class="wrap"><a class="brand" href="#" aria-label="REPRO home"><svg viewBox="0 0 30 30" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.5" d="M2 2h9M2 2v9m26-9h-9m9 0v9M2 28h9m-9 0v-9m26 9h-9m9 0v-9"/><path fill="#96351f" d="M9 9h12v12H9z"/></svg>REPRO</a><nav class="header-nav" aria-label="Page"><a href="#example">Example</a><a href="#process">How it works</a></nav></div></header>
-<main id="main" class="wrap">
-<section class="hero" aria-labelledby="headline">
-<div class="hero-copy"><p class="label eyebrow">Developer tooling / experimental</p><h1 id="headline">Every bug <span>should be a file.</span></h1><p class="lede">Capture what went wrong, share it as a <strong class="inline-code">.repro</strong> file, and test the same failure against the fix.</p><a class="primary" href="#example">Inspect a failure <span aria-hidden="true">↘</span></a><small>One tested fixture. No uploads or browser permissions.</small></div>
-<figure class="case" id="example" tabindex="-1" aria-labelledby="case-title">
-<div class="case-top label"><span>Case file 001</span><span>checkout.repro</span></div>
-<div class="case-sheet">
-<div class="case-meta"><span class="label muted">Synthetic checkout</span><span class="label muted">01 / 01</span></div>
-<figcaption class="case-title" id="case-title">One checkout. Two orders.</figcaption>
-<div class="revision" role="group" aria-label="Choose recorded result">
-<button type="button" data-revision="bad" aria-pressed="true">01 / Before fix</button>
-<button type="button" data-revision="fixed" aria-pressed="false">02 / After fix</button>
-</div>
-<dl class="receipt" id="receipt" data-state="bad">
-<div><dt>Browser showed</dt><dd>Checkout complete</dd></div>
-<div><dt>Checkout requests</dt><dd>1</dd></div>
-<div><dt>Orders in database</dt><dd id="orders" class="rows">2 (expected 1)</dd></div>
-</dl>
-<div class="verdict"><span id="verdict" class="status" aria-live="polite">REPRODUCED</span><span class="label muted">5 matched actions</span></div>
-<p class="case-note" id="annotation">The browser looked fine. The database check caught the duplicate. This example switches between recorded outcomes; it runs no code against a real checkout.</p>
-<noscript><p class="case-note">After the fix: one request wrote one row, and REPRO reported FIX_VERIFIED.</p></noscript>
-</div></figure>
-</section>
-<div class="proof" aria-label="Evidence from the recorded fixture"><div><b>01 file</b><span>Same capsule for both runs</span></div><div><b>02 revisions</b><span>Broken and fixed</span></div><div><b>10 / 10 each</b><span>Repeat runs on one test host</span></div></div>
-<section class="section" id="process" aria-labelledby="process-title">
-<div class="section-head"><p class="label">01 / Workflow</p><div><h2 id="process-title">Make “can’t reproduce” testable.</h2><p>REPRO keeps the sequence and the check together. A confirmation screen can look right while the app writes the wrong data.</p></div></div>
-<ol class="steps"><li><span class="label">01 / Capture</span><h3>Record the failure.</h3><p>Capture the approved fixture’s browser steps in a dedicated Chromium session.</p></li><li><span class="label">02 / Review</span><h3>Decide what leaves.</h3><p>Review the retained data before exporting. Inspect the file without running it.</p></li><li><span class="label">03 / Verify</span><h3>Run the same check.</h3><p>Replay against the old and fixed versions. Compare the stored outcome, not just the screen.</p></li></ol>
-</section>
-<section class="section" id="scope" aria-labelledby="scope-title">
-<div class="section-head"><p class="label">02 / Boundaries</p><div><h2 id="scope-title">What works today.</h2><p>This is a focused prototype, not a recorder for arbitrary websites.</p></div></div>
-<div class="scope"><div><h3>Tested</h3><p>One synthetic checkout fixture on Linux with Chromium and PostgreSQL. The demo restored a known starting state and compared database rows using the same recorded actions.</p></div><div><h3>Not shipped</h3><p>No public installer, arbitrary app recording, or capsule uploads. The product repository remains private. This page only shows synthetic example results.</p></div></div>
-</section>
-</main>
-<footer><div class="wrap"><p>REPRO / an experiment by <a href="https://querencia.art">0xque</a></p><a href="#main">Back to top ↑</a></div></footer>
+:root{--paper:#f6f5ef;--ink:#272b28;--quiet:#535b51;--edge:#bbbdb1;--link:#17483c;--file:#e8ece3;--code:#1d2922;--subtract:#853830;--add:#21583c;--serif:Georgia,serif;--text:"Noto Sans",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.63 var(--text)}::selection{background:#d6e5d6;color:var(--ink)}a,button,summary{color:var(--link)}a{text-underline-offset:.23em}button,summary{font:inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--link);outline-offset:4px}.wrap{width:min(680px,calc(100% - 40px));margin:auto}.mast{min-height:76px;border-bottom:1px solid var(--edge);display:flex;justify-content:space-between;align-items:center;font-size:.85rem}.mast span{font-weight:750;letter-spacing:.08em}.mast a{color:var(--quiet)}main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif);letter-spacing:-.045em;max-width:16ch;margin:0 0 20px}p{max-width:58ch;margin:0 0 1rem}.lede{font-size:1.035rem}.mark{background:var(--file);padding:.08em .25em}code,.bytes,.stamp{font-family:var(--mono);font-size:.88em;font-variant-numeric:tabular-nums}.capsule{margin:32px 0 24px;border-block:1px solid var(--edge)}.capsule>summary{list-style:none;min-height:62px;display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;padding:8px 0;font-family:var(--mono);font-size:clamp(.85rem,2.9vw,1rem);font-weight:550}.capsule>summary::-webkit-details-marker{display:none}.capsule>summary:hover .filename{text-decoration:underline;text-underline-offset:5px}.file-icon{width:21px;height:24px}.disclose{width:16px;height:16px;transition:transform .14s cubic-bezier(.23,1,.32,1)}.capsule[open] .disclose{transform:rotate(90deg)}.artifact{padding:0 0 22px 34px}.tree{border-left:1px solid var(--edge);list-style:none;margin:0 0 20px;padding:0 0 0 12px}.tree li{display:grid;grid-template-columns:minmax(80px,1fr) 1.4fr;gap:12px;margin:8px 0;align-items:baseline}.tree small,.small{font-size:.83rem;color:var(--quiet)}.result{margin:24px 0 0}.result h2{font-size:1rem;font-weight:650;margin:0 0 8px}.diff{display:grid;gap:2px;margin:0 0 8px}.diff code{padding:6px 12px}.diff code:first-child{background:#f0e4e0;color:var(--subtract)}.diff code:last-child{background:#e0ecdf;color:var(--add)}.command{margin:20px 0 8px;display:flex;align-items:start;gap:12px;border-top:1px dotted var(--edge);padding-top:12px}.command code{overflow-wrap:anywhere;flex:1}.command button{display:none;border:0;background:none;text-decoration:underline;text-underline-offset:4px;padding:0;font-size:.85rem}.command button.ready{display:block}.copy-state{min-height:1.1em;margin:0;color:var(--quiet);font-size:.8rem}.footer{border-top:1px solid var(--edge);padding:16px 0 28px;font-size:.82rem;color:var(--quiet)}@media(max-width:400px){main{padding-top:32px}.artifact{padding-left:12px}.tree li{gap:8px}.mast{min-height:64px}}@media(prefers-reduced-motion:reduce){.disclose{transition:none}}
+</style></head><body>
+<div class="wrap"><header class="mast"><span>REPRO</span><a href="https://querencia.art/">by 0xque</a></header>
+<main>
+<h1>A bug report you can run</h1>
+<p class="lede">I’m building REPRO around a small idea: instead of telling someone how to reproduce a bug, give them the test that failed.</p>
+<p>The example is a checkout that says <span class="mark">Checkout complete</span> even though it writes two orders. Same button, same confirmation. The database is where the bug shows up.</p>
+<details class="capsule">
+<summary><svg viewBox="0 0 20 24" fill="none" stroke="currentColor" stroke-width="1.4" class="file-icon" aria-hidden="true"><path d="M3.5 2.5h8l5 5v14h-13zM11.5 2.5v5h5M6.5 12.5h7m-7 4h7"/></svg><span class="filename">checkout.repro</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" class="disclose" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></summary>
+<div class="artifact">
+<p class="small">A snapshot of the known test inputs, recorded actions, and the assertion.</p>
+<ul class="tree"><li><code>scenario/</code><small>Recorded actions and the order-count check</small></li><li><code>fixtures/</code><small>Test database and shipping response</small></li><li><code>report/</code><small>Capture summary</small></li></ul>
+<section class="result" aria-labelledby="result"><h2 id="result">What changed</h2><div class="diff"><code>− 2 orders on the old revision</code><code>+ 1 order on the fixed revision</code></div><p class="small">Both runs matched all five recorded actions. This is saved fixture evidence, not a live checkout.</p>
+<p class="small">Compare command in the current draft:</p><div class="command"><code id="cmd">repro compare checkout.repro before.json after.json</code><button type="button" id="copy">Copy command</button></div><p class="copy-state" id="copy-state" role="status"></p></section></div>
+</details>
+<p class="small">The included checkout fixture is the only supported target today. No uploads or public installer.</p>
+</main><footer class="footer">A project note from 0xque.</footer></div>
 <script>
-(() => {
-const states = {
-  bad: ['2 (expected 1)', 'REPRODUCED', 'The browser looked fine. The database check caught the duplicate. This example switches between recorded outcomes; it runs no code against a real checkout.'],
-  fixed: ['1 (expected 1)', 'FIX_VERIFIED', 'The same five steps, the same starting state, and the same check. After the fix, one checkout wrote one order.']
-};
-const buttons = [...document.querySelectorAll('[data-revision]')];
-for (const button of buttons) button.addEventListener('click', () => {
-  const key = button.dataset.revision;
-  const [orders, verdict, note] = states[key];
-  document.getElementById('receipt').dataset.state = key;
-  document.getElementById('orders').textContent = orders;
-  document.getElementById('verdict').textContent = verdict;
-  document.getElementById('annotation').textContent = note;
-  for (const item of buttons) item.setAttribute('aria-pressed', String(item === button));
-});
-for (const button of buttons) button.addEventListener('keydown', (event) => {
-  if (!['ArrowLeft','ArrowRight'].includes(event.key)) return;
-  event.preventDefault();
-  const next = buttons[event.key === 'ArrowLeft' ? 0 : 1];
-  next.focus();
-  next.click();
-});
-for (const link of document.querySelectorAll('a[href="#example"]')) link.addEventListener('click', () => {
-  document.getElementById('example').focus({preventScroll:true});
-});
-})();
-</script>
-</body>
-</html>
+const copy = document.getElementById('copy');
+if(navigator.clipboard?.writeText){copy.classList.add('ready');copy.addEventListener('click',async()=>{const status=document.getElementById('copy-state');try{await navigator.clipboard.writeText(document.getElementById('cmd').textContent);status.textContent='Copied.';}catch{status.textContent='Could not copy. Select the command text to copy it.';}});}
+</script></body></html>

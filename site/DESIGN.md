@@ -1,7 +1,7 @@
-# REPRO design notes
+# REPRO build note
 
-- [Rauno Freiberg, Invisible Details of Interaction Design](https://rauno.me/craft/interaction-design): make the metaphor teach the control. A real evidence sheet suggests before/after views; retain the same rows and layout, add explicit pressed states, and keep tap, keyboard and focus behavior predictable. No tracing his site's visual layout.
-- [Emil Kowalski, You Don't Need Animations](https://emilkowal.ski/ui/you-dont-need-animations): rapid state switching should be immediate. The receipt has no transition and no timed gates.
-- [Dieter Rams, What is good design?](https://www.vitsoe.com/us/about/good-design): strip away unsupported claims and decoration. Display the synthetic proof and actual limits directly. The warm paper, single rust accent and registration-mark icon come from a print case-file metaphor.
+The page is a short note by 0xque, not a product dashboard. One native disclosure opens the checkout specimen; the evidence compares two saved outcomes from the same synthetic fixture. No scrubber, uploads, or live checkout.
 
-The demo presents two recorded outcomes from the same synthetic fixture. It does not run a checkout or upload anything.
+- [Pierre, On Rendering Diffs](https://pierre.computer/writing/on-rendering-diffs): keep the changed lines foregrounded and make unchanged context available on demand.
+- [Difftastic](https://difftastic.wilfred.me.uk/): keep noise out of the result. Here, the one useful difference is the order count.
+- [Rauno Freiberg, Invisible Details of Interaction Design](https://rauno.me/craft/interaction-design): make the disclosure recognizable, responsive to keyboard and touch, and clear about its open state.
