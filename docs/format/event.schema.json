@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "t_us": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000000
+        },
+        "page": {
+          "type": "string",
+          "const": "main"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 5000
+        },
+        "kind": {
+          "type": "string",
+          "const": "navigate"
+        },
+        "path": {
+          "type": "string",
+          "const": "/"
+        }
+      },
+      "required": [
+        "seq",
+        "t_us",
+        "page",
+        "timeout_ms",
+        "kind",
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "t_us": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000000
+        },
+        "page": {
+          "type": "string",
+          "const": "main"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 5000
+        },
+        "kind": {
+          "type": "string",
+          "const": "click"
+        },
+        "test_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,47}$"
+        }
+      },
+      "required": [
+        "seq",
+        "t_us",
+        "page",
+        "timeout_ms",
+        "kind",
+        "test_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "t_us": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000000
+        },
+        "page": {
+          "type": "string",
+          "const": "main"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 5000
+        },
+        "kind": {
+          "type": "string",
+          "const": "fill"
+        },
+        "test_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,47}$"
+        },
+        "value": {
+          "type": "string",
+          "const": "Sample label"
+        }
+      },
+      "required": [
+        "seq",
+        "t_us",
+        "page",
+        "timeout_ms",
+        "kind",
+        "test_id",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "t_us": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000000
+        },
+        "page": {
+          "type": "string",
+          "const": "main"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 5000
+        },
+        "kind": {
+          "type": "string",
+          "const": "wait"
+        },
+        "test_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,47}$"
+        }
+      },
+      "required": [
+        "seq",
+        "t_us",
+        "page",
+        "timeout_ms",
+        "kind",
+        "test_id"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "t_us": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000000
+        },
+        "page": {
+          "type": "string",
+          "const": "main"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 5000
+        },
+        "kind": {
+          "type": "string",
+          "const": "failure"
+        },
+        "oracle": {
+          "type": "string",
+          "const": "order-count"
+        }
+      },
+      "required": [
+        "seq",
+        "t_us",
+        "page",
+        "timeout_ms",
+        "kind",
+        "oracle"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

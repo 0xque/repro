@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "actions": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999
+    },
+    "observed_orders": {
+      "type": "number",
+      "const": 2
+    },
+    "checkout_complete": {
+      "type": "boolean",
+      "const": true
+    },
+    "matched_http": {
+      "type": "number",
+      "const": 1
+    }
+  },
+  "required": [
+    "actions",
+    "observed_orders",
+    "checkout_complete",
+    "matched_http"
+  ],
+  "additionalProperties": false
+}

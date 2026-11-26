@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "capsule_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "title": {
+      "type": "string",
+      "const": "Checkout duplicates order"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "source_revision": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "recipe_id": {
+          "type": "string",
+          "const": "checkout-v1"
+        },
+        "recipe_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "framework": {
+          "type": "string",
+          "const": "node"
+        },
+        "browser": {
+          "type": "string",
+          "const": "chromium"
+        },
+        "browser_revision": {
+          "type": "string",
+          "const": "1255"
+        },
+        "locale": {
+          "type": "string",
+          "const": "en-US"
+        },
+        "timezone": {
+          "type": "string",
+          "const": "UTC"
+        },
+        "viewport": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number",
+              "const": 1280
+            },
+            {
+              "type": "number",
+              "const": 800
+            }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "source_revision",
+        "recipe_id",
+        "recipe_digest",
+        "framework",
+        "browser",
+        "browser_revision",
+        "locale",
+        "timezone",
+        "viewport"
+      ],
+      "additionalProperties": false
+    },
+    "required_capabilities": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "string",
+          "const": "browser.chromium"
+        },
+        {
+          "type": "string",
+          "const": "postgres.fixture.v1"
+        },
+        {
+          "type": "string",
+          "const": "http.fixture.v1"
+        }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "network_policy": {
+      "type": "string",
+      "const": "external-deny"
+    },
+    "reproducibility": {
+      "type": "object",
+      "properties": {
+        "grade": {
+          "type": "string",
+          "const": "fixture-backed"
+        },
+        "known_gaps": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "string",
+              "const": "Checkout fixture only; main frame and test IDs only"
+            }
+          ],
+          "items": false,
+          "minItems": 1,
+          "maxItems": 1
+        }
+      },
+      "required": [
+        "grade",
+        "known_gaps"
+      ],
+      "additionalProperties": false
+    },
+    "privacy": {
+      "type": "object",
+      "properties": {
+        "policy_version": {
+          "type": "string",
+          "const": "1"
+        },
+        "reviewed": {
+          "type": "boolean",
+          "const": true
+        },
+        "contains_raw_capture": {
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "required": [
+        "policy_version",
+        "reviewed",
+        "contains_raw_capture"
+      ],
+      "additionalProperties": false
+    },
+    "attachments": {
+      "minItems": 5,
+      "maxItems": 63,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "scenario/events.ndjson",
+                  "scenario/assertions.json",
+                  "fixtures/postgres.json",
+                  "fixtures/http.json",
+                  "report/capture-summary.json"
+                ]
+              },
+              {
+                "type": "string",
+                "pattern": "^attachments\\/sha256\\/[a-f0-9]{64}$"
+              }
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2097152
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "bytes"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "oracle": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "const": "scenario/assertions.json"
+        },
+        "version": {
+          "type": "number",
+          "const": 1
+        }
+      },
+      "required": [
+        "path",
+        "version"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "capsule_id",
+    "title",
+    "created_at",
+    "target",
+    "required_capabilities",
+    "network_policy",
+    "reproducibility",
+    "privacy",
+    "attachments",
+    "oracle"
+  ],
+  "additionalProperties": false
+}

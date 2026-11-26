@@ -1,0 +1,33 @@
+{
+  "name": "repro-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": { "node": "26.13.0", "npm": "12.2.1" },
+  "packageManager": "npm@12.2.1",
+  "bin": { "repro": "./dist/packages/cli/src/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "repro": "node dist/packages/cli/src/index.js",
+    "demo": "bash examples/checkout/demo.sh"
+  },
+  "dependencies": {
+    "jsonc-parser": "3.3.1",
+    "pg": "8.23.1",
+    "playwright": "1.65.1",
+    "yaml": "2.9.1",
+    "yauzl": "3.4.0",
+    "yazl": "3.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.10",
+    "@types/pg": "8.23.1",
+    "@types/yauzl": "3.4.0",
+    "@types/yazl": "3.3.1",
+    "typescript": "6.0.3"
+  }
+}

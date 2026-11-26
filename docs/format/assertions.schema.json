@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "failure": {
+      "type": "object",
+      "properties": {
+        "oracle": {
+          "type": "string",
+          "const": "order-count"
+        },
+        "observe": {
+          "type": "number",
+          "const": 2
+        },
+        "expected": {
+          "type": "number",
+          "const": 1
+        }
+      },
+      "required": [
+        "oracle",
+        "observe",
+        "expected"
+      ],
+      "additionalProperties": false
+    },
+    "success": {
+      "type": "object",
+      "properties": {
+        "test_id": {
+          "type": "string",
+          "const": "confirmation"
+        },
+        "text": {
+          "type": "string",
+          "const": "Checkout complete"
+        }
+      },
+      "required": [
+        "test_id",
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "failure",
+    "success"
+  ],
+  "additionalProperties": false
+}

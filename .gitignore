@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.repro/
+*.repro
+AGENTS.md
+/examples/checkout/*/repro.config.yaml
+graphify-out/
+
+!fixtures/capsules/checkout.repro

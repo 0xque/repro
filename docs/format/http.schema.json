@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "type": "string",
+          "const": "GET"
+        },
+        "url": {
+          "type": "string",
+          "const": "https://shipping.repro.test/quote"
+        }
+      },
+      "required": [
+        "method",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "number",
+          "const": 200
+        },
+        "cents": {
+          "type": "number",
+          "const": 250
+        }
+      },
+      "required": [
+        "status",
+        "cents"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "request",
+    "response"
+  ],
+  "additionalProperties": false
+}

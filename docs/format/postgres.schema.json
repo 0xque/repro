@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "product": {
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string",
+          "const": "sample-kit"
+        },
+        "price_cents": {
+          "type": "number",
+          "const": 1200
+        }
+      },
+      "required": [
+        "sku",
+        "price_cents"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "product"
+  ],
+  "additionalProperties": false
+}

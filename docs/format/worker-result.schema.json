@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "CAPTURED",
+        "REPRODUCED",
+        "NOT_REPRODUCED",
+        "FIX_VERIFIED",
+        "STILL_FAILING",
+        "DIVERGED",
+        "INCONCLUSIVE",
+        "BLOCKED",
+        "ERROR",
+        "CANCELLED"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "prepare",
+        "restore",
+        "healthcheck",
+        "execute",
+        "assert",
+        "report",
+        "cleanup"
+      ]
+    },
+    "events": {
+      "maxItems": 1000,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "matched",
+              "diverged"
+            ]
+          }
+        },
+        "required": [
+          "seq",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "actual": {
+      "type": "object",
+      "properties": {
+        "orders": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkout_complete": {
+          "type": "boolean"
+        },
+        "matched_http": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unmatched_http": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "checkout_requests": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "page_errors": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "orders",
+        "checkout_complete",
+        "matched_http",
+        "unmatched_http",
+        "checkout_requests",
+        "page_errors"
+      ],
+      "additionalProperties": false
+    },
+    "network": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "loopback-only"
+      ]
+    },
+    "duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "detail": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "capture": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "minItems": 2,
+          "maxItems": 1000,
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "seq": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "t_us": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3600000000
+                  },
+                  "page": {
+                    "type": "string",
+                    "const": "main"
+                  },
+                  "timeout_ms": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 5000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "navigate"
+                  },
+                  "path": {
+                    "type": "string",
+                    "const": "/"
+                  }
+                },
+                "required": [
+                  "seq",
+                  "t_us",
+                  "page",
+                  "timeout_ms",
+                  "kind",
+                  "path"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "seq": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "t_us": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3600000000
+                  },
+                  "page": {
+                    "type": "string",
+                    "const": "main"
+                  },
+                  "timeout_ms": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 5000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "click"
+                  },
+                  "test_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]{0,47}$"
+                  }
+                },
+                "required": [
+                  "seq",
+                  "t_us",
+                  "page",
+                  "timeout_ms",
+                  "kind",
+                  "test_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "seq": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "t_us": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3600000000
+                  },
+                  "page": {
+                    "type": "string",
+                    "const": "main"
+                  },
+                  "timeout_ms": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 5000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "fill"
+                  },
+                  "test_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]{0,47}$"
+                  },
+                  "value": {
+                    "type": "string",
+                    "const": "Sample label"
+                  }
+                },
+                "required": [
+                  "seq",
+                  "t_us",
+                  "page",
+                  "timeout_ms",
+                  "kind",
+                  "test_id",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "seq": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "t_us": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3600000000
+                  },
+                  "page": {
+                    "type": "string",
+                    "const": "main"
+                  },
+                  "timeout_ms": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 5000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "wait"
+                  },
+                  "test_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9-]{0,47}$"
+                  }
+                },
+                "required": [
+                  "seq",
+                  "t_us",
+                  "page",
+                  "timeout_ms",
+                  "kind",
+                  "test_id"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "seq": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1000
+                  },
+                  "t_us": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3600000000
+                  },
+                  "page": {
+                    "type": "string",
+                    "const": "main"
+                  },
+                  "timeout_ms": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 5000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "failure"
+                  },
+                  "oracle": {
+                    "type": "string",
+                    "const": "order-count"
+                  }
+                },
+                "required": [
+                  "seq",
+                  "t_us",
+                  "page",
+                  "timeout_ms",
+                  "kind",
+                  "oracle"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "actions": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 999
+            },
+            "observed_orders": {
+              "type": "number",
+              "const": 2
+            },
+            "checkout_complete": {
+              "type": "boolean",
+              "const": true
+            },
+            "matched_http": {
+              "type": "number",
+              "const": 1
+            }
+          },
+          "required": [
+            "actions",
+            "observed_orders",
+            "checkout_complete",
+            "matched_http"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "events",
+        "summary"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "status",
+    "phase",
+    "events",
+    "actual",
+    "network",
+    "duration_ms"
+  ],
+  "additionalProperties": false
+}
