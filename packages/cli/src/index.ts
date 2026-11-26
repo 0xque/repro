@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { readCapsule, writeCapsule } from '../../capsule/src/index.js';
 import { excluded } from '../../redaction/src/index.js';
+import { ComparisonError, compareReports, formatComparison, readReport } from '../../replay/src/compare.js';
 import { dockerReady, imageRevisions, runDocker } from '../../replay/src/docker.js';
 import { initRecipe, loadRecipe, recipeDigest } from '../../replay/src/recipe.js';
 import { exitCodes } from '../../replay/src/result.js';
@@ -23,6 +24,7 @@ const commands = {
   export: { project: string, ...sessionArgs, out: string },
   inspect: { summary: flag },
   play: { project: string, offline: flag, approve: flag },
+  compare: {},
   verify: { project: string, offline: flag, approve: flag },
   purge: { project: string, ...sessionArgs }
 };
@@ -38,6 +40,7 @@ const help = `REPRO · fixture-backed checkout recordings
   repro inspect checkout.repro [--summary]
   repro play checkout.repro --project DIR --offline --approve
   repro verify checkout.repro --project DIR --offline --approve
+  repro compare checkout.repro baseline.json candidate.json [--json]
   repro purge --project DIR [--session ID]
 
 Add --json to emit compact machine-readable output.
@@ -66,7 +69,7 @@ async function main() {
   const values = parsed.values as Record<string, string | boolean | undefined>;
   compact = !!values.json;
   const needsCapsule = command === 'inspect' || command === 'play' || command === 'verify';
-  if (parsed.positionals.length !== Number(needsCapsule)) throw new UsageError('Incorrect number of positional arguments');
+  if (parsed.positionals.length !== (command === 'compare' ? 3 : Number(needsCapsule))) throw new UsageError('Incorrect number of positional arguments');
   const project = resolve(String(values.project ?? '.'));
   const opts = (key: string) => {
     const value = values[key];
@@ -199,6 +202,15 @@ async function main() {
       print({ ...report, ...result });
       return exitCodes[result.status];
     }
+    case 'compare': {
+      const capsule = await readCapsule(resolve(parsed.positionals[0]!));
+      const baseline = await readReport(resolve(parsed.positionals[1]!));
+      const candidate = await readReport(resolve(parsed.positionals[2]!));
+      const result = compareReports(capsule, baseline, candidate);
+      if (values.json) print(result);
+      else process.stdout.write(formatComparison(result));
+      return exitCodes[result.status];
+    }
     case 'purge': {
       const store = await privateStore(project);
       print({ purged: await purgeDrafts(store, values.session ? opts('session') : undefined) });
@@ -211,7 +223,7 @@ try {
   process.exitCode = await main();
 } catch (error) {
   const code = (error as NodeJS.ErrnoException)?.code;
-  const detail = error instanceof UsageError ? error.message
+  const detail = error instanceof UsageError || error instanceof ComparisonError ? error.message
     : code?.startsWith('ERR_PARSE_ARGS') ? 'Invalid command-line options'
     : code === 'ENOENT' ? 'Required file or approved review is missing'
     : code === 'EEXIST' ? 'Output already exists'
