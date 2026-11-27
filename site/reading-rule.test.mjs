@@ -241,7 +241,12 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
         if (name === 'editorial-2560') {
           await step(page, -1);
           const summary = page.locator('#file > summary');
-          await summary.click();
+          const closedBeforeToggle = await summary.evaluate(disclosure => {
+            disclosure.click();
+            window.dispatchEvent(new Event('resize'));
+            return !disclosure.parentElement.open;
+          });
+          assert.equal(closedBeforeToggle, true);
           await page.waitForFunction(() => !document.querySelector('#file').open);
           await page.setViewportSize({ width: 1366, height: 768 });
           await page.setViewportSize({ width, height });

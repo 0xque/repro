@@ -24,6 +24,8 @@ export function mountReadingRule(ruler) {
   let proofTouched = proof.open;
 
   function syncProof() {
+    // The native toggle notification can arrive after a resize.
+    if (proof.open !== defaultOpen) proofTouched = true;
     if (!proofTouched && (editorial.matches || !proof.contains(document.activeElement))) {
       defaultOpen = editorial.matches;
       proof.open = defaultOpen;
