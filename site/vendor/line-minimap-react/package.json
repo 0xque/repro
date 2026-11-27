@@ -1,0 +1,31 @@
+{
+  "name": "line-minimap-react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A React scroll minimap with pointer magnification and drag scrubbing.",
+  "exports": {
+    ".": {
+      "types": "./src/react.d.ts",
+      "default": "./src/react.js"
+    },
+    "./styles.css": {
+      "types": "./src/styles.d.ts",
+      "default": "./src/line-minimap.css"
+    }
+  },
+  "files": [
+    "src/react.js",
+    "src/react.d.ts",
+    "src/styles.d.ts",
+    "src/line-minimap.js",
+    "src/line-minimap.css"
+  ],
+  "sideEffects": [
+    "./src/line-minimap.js",
+    "./src/line-minimap.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  }
+}

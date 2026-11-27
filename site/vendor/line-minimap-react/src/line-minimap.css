@@ -1,0 +1,156 @@
+line-minimap {
+  --minimap-inset: 32px;
+  --minimap-minor: 24px;
+  --minimap-major: 40px;
+  --minimap-mark: #777d76;
+  --minimap-strong: #242624;
+  --minimap-accent: #234ac6;
+  --minimap-on-accent: #faf7ef;
+  --minimap-progress: 0;
+  position: fixed;
+  z-index: 2;
+  inset-inline-start: var(--minimap-inset);
+  inset-block-start: 50%;
+  display: block;
+  transform: translateY(-50%);
+  width: 92px;
+  height: min(315px, 56dvh);
+  font: 11px/1 ui-monospace, monospace;
+}
+
+.line-minimap__track,
+.line-minimap__ticks {
+  position: absolute;
+  inset: 0;
+}
+
+.line-minimap__ticks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.line-minimap__ticks span {
+  display: block;
+  background: var(--minimap-mark);
+  width: var(--minimap-minor);
+  height: 1px;
+  transform: scaleX(var(--tick-scale, 1));
+  transform-origin: left;
+  transition: transform 170ms cubic-bezier(.2, .75, .35, 1), background-color 130ms ease;
+}
+
+.line-minimap__ticks .line-minimap__major {
+  width: var(--minimap-major);
+  background: var(--minimap-strong);
+}
+
+.line-minimap__ticks .line-minimap__nearest {
+  background: var(--minimap-accent);
+}
+
+.line-minimap__guide {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(100vw - var(--minimap-inset) * 2);
+  transform: translateY(calc(var(--minimap-progress) * (100% - 1px)));
+  pointer-events: none;
+}
+
+.line-minimap__guide::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: color-mix(in srgb, var(--minimap-accent) 43%, transparent);
+}
+
+.line-minimap__guide::after {
+  content: '';
+  position: absolute;
+  inset: -2px auto auto -12px;
+  width: 5px;
+  height: 5px;
+  transform: rotate(45deg);
+  background: var(--minimap-accent);
+}
+
+.line-minimap__guide span {
+  position: absolute;
+  inset: 0 0 auto auto;
+  min-width: 4ch;
+  padding: 5px 7px;
+  text-align: center;
+  color: var(--minimap-on-accent);
+  background: var(--minimap-accent);
+}
+
+.line-minimap__range {
+  appearance: none;
+  writing-mode: vertical-lr;
+  position: absolute;
+  inset: -8px 0 -8px -12px;
+  width: calc(100% + 12px);
+  height: calc(100% + 16px);
+  margin: 0;
+  opacity: 0;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.line-minimap__range:active {
+  cursor: grabbing;
+}
+
+.line-minimap__track:has(:focus-visible) {
+  outline: 2px solid var(--minimap-accent);
+  outline-offset: 5px;
+}
+
+line-minimap[data-idle] {
+  visibility: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  line-minimap {
+    --minimap-mark: #9ba2aa;
+    --minimap-strong: #f5f0e6;
+    --minimap-accent: #a5b6ff;
+    --minimap-on-accent: #1c1f23;
+  }
+}
+
+@media (max-width: 760px) {
+  line-minimap {
+    --minimap-inset: 14px;
+    --minimap-minor: 9px;
+    --minimap-major: 14px;
+    width: 32px;
+    height: min(260px, 46dvh);
+  }
+
+  .line-minimap__guide {
+    width: 27px;
+  }
+
+  .line-minimap__guide::after {
+    inset-inline-start: -8px;
+  }
+
+  .line-minimap__guide span {
+    inset: 5px auto auto 0;
+    min-width: 0;
+    padding: 3px;
+  }
+
+  .line-minimap__ticks span {
+    transform: scaleX(min(1.75, var(--tick-scale, 1)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line-minimap__ticks span {
+    transition: none;
+  }
+}

@@ -2,4 +2,19 @@
 
 The build note opens a single synthetic checkout specimen and contrasts two saved results. It does not accept uploads, call APIs, execute a capsule, or run a live checkout. See [the underlying local evidence](../docs/evidence/checkout.md).
 
-`index.html` is self-contained. To generate the Cloudflare Worker module with Content Security Policy hashes, run `node site/build-worker.mjs` in the repository root. The generated file is intentionally ignored. The dedicated production Worker is routed on the project's requested hostname only. The private product repository is maintained separately from the public demo.
+`index.html` is self-contained. To generate the Cloudflare Worker module with Content Security Policy hashes, run `node site/build-worker.mjs` in the repository root. The generated Worker is versioned with the HTML. The dedicated production Worker is routed on the project's requested hostname only. The private product repository is maintained separately from the public demo.
+
+## Reading ruler
+
+The article is static HTML. The only React island is the reading ruler. REPRO bundles its own copy of React and `LineMinimap` into the page; nothing is fetched at runtime. The package uses the browser’s scrolling and does not depend on Lenis. The leave-behind navigation links still lead to the article when JavaScript is disabled.
+
+To update the island or its theme, run from the repo root:
+
+```sh
+npm --prefix site ci --ignore-scripts
+npm --prefix site run build
+```
+
+Commit the rebuilt `site/index.html` and `site/worker.mjs` with the source change. If you only need to regenerate the Worker from committed HTML, run `node site/build-worker.mjs`; no npm install is needed for that path.
+
+The private, owner-supplied `line-minimap-react@0.1.0` is vendored as source under `vendor/line-minimap-react/` without the original archive or local-path README. Source package archive SHA-256: `52b7ee4be45f94f0a9173c6e90e7175a3152bb48800ea3696e1055b41389c518`. Package source is not distributed as a separate download or represented as open-source. Third-party React and Scheduler notices are bundled into the inlined JavaScript.
