@@ -1,14 +1,26 @@
 /* REPRO stays on light paper regardless of the system color scheme. */
 #minimap-island line-minimap {
+  --ruler-height: min(315px,56dvh,max(1px,calc(var(--ruler-limit,100dvh) - 12px)));
+  block-size: var(--ruler-height);
+  inset-block-start: min(50%,calc(var(--ruler-limit,100dvh) - var(--ruler-height) / 2));
   --minimap-mark: #787c74;
   --minimap-strong: #242624;
   --minimap-accent: #926516;
   --minimap-on-accent: #faf7ef;
 }
-#minimap-island .line-minimap__guide::before {
-  background: color-mix(in srgb, var(--minimap-accent) 76%, transparent);
+@media(max-width:928px){
+  #minimap-island line-minimap{
+    --minimap-inset: 14px;
+    --minimap-minor: 9px;
+    --minimap-major: 14px;
+    inline-size: 28px;
+    --ruler-height: min(260px,46dvh,max(1px,calc(var(--ruler-limit,100dvh) - 12px)));
+  }
 }
+#minimap-island .line-minimap__guide::before,
+#minimap-island .line-minimap__guide span { display: none; }
 #minimap-island .line-minimap__guide::after {
+  opacity: calc(1 - var(--ruler-handoff,0));
   inset-block-start: -4px;
   width: 8px;
   height: 9px;

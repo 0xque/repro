@@ -5,15 +5,20 @@ import 'line-minimap-react/styles.css';
 import 'lenis/dist/lenis.css';
 import './minimap-theme.css';
 import { createMinimapScroll } from './minimap-scroll.js';
+import { mountReadingRule } from './reading-rule.js';
+
+const island = document.getElementById('minimap-island');
 
 function ReadingMinimap() {
   const scroll = useRef(null);
   useEffect(() => {
     const controller = createMinimapScroll();
+    const disconnectRule = mountReadingRule(island.querySelector('line-minimap'));
     scroll.current = controller;
     return () => {
       scroll.current = null;
       controller.dispose();
+      disconnectRule?.();
     };
   }, []);
   const onSeek = useCallback((request) => {
@@ -27,4 +32,4 @@ function ReadingMinimap() {
   });
 }
 
-createRoot(document.getElementById('minimap-island')).render(createElement(ReadingMinimap));
+createRoot(island).render(createElement(ReadingMinimap));
