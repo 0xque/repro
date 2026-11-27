@@ -15,7 +15,7 @@ const bundle = await build({
   legalComments: 'inline',
   define: { 'process.env.NODE_ENV': '"production"' },
 });
-const notices = await Promise.all(['react', 'react-dom', 'scheduler'].map(async (name) =>
+const notices = await Promise.all(['react', 'react-dom', 'scheduler', 'lenis'].map(async (name) =>
   name + ':\n' + (await readFile(new URL('./node_modules/' + name + '/LICENSE', import.meta.url), 'utf8')).trim()));
 const page = new URL('./index.html', import.meta.url);
 let html = await readFile(page, 'utf8');

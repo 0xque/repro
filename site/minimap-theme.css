@@ -15,3 +15,6 @@
   transform: none;
   clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
+
+/* Lenis owns easing while active; otherwise preserve native page scrolling. */
+html.lenis { scroll-behavior: auto; }
