@@ -19,12 +19,8 @@ Commit the rebuilt `site/index.html` and `site/worker.mjs` with the source chang
 
 The private, owner-supplied `line-minimap-react@0.1.0` is vendored as source under `vendor/line-minimap-react/` without the original archive or local-path README. Source package archive SHA-256: `52b7ee4be45f94f0a9173c6e90e7175a3152bb48800ea3696e1055b41389c518`. Package source is not distributed as a separate download or represented as open-source. Third-party React, Scheduler, and Lenis notices are bundled into the inlined JavaScript.
 
-## Footer endmark (off by default)
+## Bodoni Moda endmark
 
-The Harmond SemiBold Condensed endmark has no checked-in font and is hidden in the standard build. Do not use the free/demo download: verify with [Dirtyline Studio](https://dirtylinestudio.com/pages/license) that the acquired license covers self-hosted web embedding and use as a branded wordmark. No font should be added to the repository. When the appropriately licensed, unmodified WOFF2 is available, generate an explicitly separate build:
+Only the closing wordmark uses Bodoni Moda by Owen Earl / the Bodoni Moda Project Authors. The self-hosted static face pins the variable font at `wght=520` and `opsz=76`; all other typography stays unchanged. The original [Google Fonts source](https://github.com/google/fonts/tree/634558fcb/ofl/bodonimoda) is pinned to revision `634558fcb` (roman variable SHA-256 `550f5e34ee0a828d7941b1fe9bc58b34e5260d3f33a61532e6d0a0114e79a5cf`). The approved static instance has SHA-256 `a4fd542b56511b7e722a354ff31229e6203c818b1016da46a8f49c8addcbba7a` and is distributed with its [SIL Open Font License 1.1 and copyright notice](assets/BodoniModa-OFL.txt). No Harmond files or proprietary-license build steps are used.
 
-```sh
-REPRO_ENDMARK_LICENSED_WOFF2=/absolute/path/to/licensed-harmond.woff2 node site/build-worker.mjs
-```
-
-The result is `site/.build/worker-with-endmark.mjs` (ignored by Git), not the tracked Worker. The document reveals the mark only after the embedded face loads successfully. A regular build stays disabled and needs no font request. Review any enabled build before authorizing it for publication.
+The Worker serves the pinned face and notice from the same origin. Only the four distinct letters in REPRO use it, with no preload, stylesheet request or CDN dependency. The footer is live HTML text; an unavailable font falls back to a system serif.

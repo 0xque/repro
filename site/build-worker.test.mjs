@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -15,6 +15,10 @@ test('Worker CSP matches inline content after browser newline normalization', as
   await writeFile(join(dir, 'index.html'), html);
   const builder = join(dir, 'build-worker.mjs');
   await copyFile(new URL('./build-worker.mjs', import.meta.url), builder);
+  await mkdir(join(dir, 'assets'));
+  for (const name of ['bodoni-moda-520-display-a4fd542b.ttf', 'BodoniModa-OFL.txt']) {
+    await copyFile(new URL('./assets/' + name, import.meta.url), join(dir, 'assets', name));
+  }
   execFileSync(process.execPath, [builder]);
   const { default:worker } = await import(pathToFileURL(join(dir, 'worker.mjs')));
   const response = worker.fetch(new Request('https://repro.querencia.art/'));
@@ -30,46 +34,28 @@ test('Worker CSP matches inline content after browser newline normalization', as
   }
 });
 
-test('endmark is off by default and an opted-in font never writes the tracked Worker', async (t) => {
-  const dir = await mkdtemp(join(tmpdir(), 'repro-endmark-'));
-  t.after(() => rm(dir, { recursive:true, force:true }));
-  const markup = '<style>.repro-endmark[hidden]{display:none}</style>' +
-    '<div id="repro-endmark" class="repro-endmark" hidden aria-hidden="true"><span>REPRO</span></div>' +
-    '<script>window.loaded = true;</script>';
-  await writeFile(join(dir, 'index.html'), markup);
-  const builder = join(dir, 'build-worker.mjs');
-  await copyFile(new URL('./build-worker.mjs', import.meta.url), builder);
-  const env = { ...process.env };
-  delete env.REPRO_ENDMARK_LICENSED_WOFF2;
-  execFileSync(process.execPath, [builder], { env });
-  const standard = join(dir, 'worker.mjs');
-  const original = await readFile(standard, 'utf8');
-  const { default:worker } = await import(pathToFileURL(standard));
-  const request = new Request('https://repro.querencia.art/');
-  const response = worker.fetch(request);
-  assert.equal(await response.text(), markup);
-  assert.doesNotMatch(response.headers.get('content-security-policy'), /font-src/);
-
-  // Header-only test data for the builder opt-in, never used as a browser font.
-  const font = Buffer.alloc(48);
-  font.write('wOF2');
-  font.writeUInt32BE(font.length, 8);
-  const fontPath = join(dir, 'test-only.woff2');
-  await writeFile(fontPath, font);
-  env.REPRO_ENDMARK_LICENSED_WOFF2 = fontPath;
-  execFileSync(process.execPath, [builder], { env });
-  assert.equal(await readFile(standard, 'utf8'), original);
-  const { default:enabled } = await import(pathToFileURL(join(dir, '.build', 'worker-with-endmark.mjs')));
-  const built = enabled.fetch(request);
-  const html = await built.text();
-  for (const tag of ['style', 'script']) {
-    const text = html.match(new RegExp('<' + tag + '>([\\s\\S]*?)</' + tag + '>'))[1];
-    assert.ok(built.headers.get('content-security-policy').includes(tag + "-src 'sha256-" +
-      createHash('sha256').update(text).digest('base64') + "'"));
-  }
-  assert.match(built.headers.get('content-security-policy'), /font-src data:/);
-  assert.match(html, /@font-face/);
-  assert.match(html, /document\.fonts\?\.load/);
-  assert.match(html, /id="repro-endmark" class="repro-endmark" hidden aria-hidden="true"/);
-  assert.match(html, /data:font\/woff2;base64,/);
+test('endmark is same-origin text and the Worker serves the exact pinned font and license', async () => {
+  const { default:worker } = await import('./worker.mjs');
+  const origin = 'https://repro.querencia.art';
+  const path = '/assets/bodoni-moda-520-display-a4fd542b.ttf';
+  const document = worker.fetch(new Request(origin));
+  assert.match(document.headers.get('content-security-policy'), /font-src 'self'/);
+  const html = await document.text();
+  assert.match(html, /<div id="repro-endmark" class="repro-endmark"><span>REPRO<\/span><\/div>/);
+  assert.match(html, /unicode-range:U\+0045,U\+004F-0050,U\+0052/);
+  assert.match(html, /src:url\("\/assets\/bodoni-moda-520-display-a4fd542b.ttf"\)/);
+  assert.doesNotMatch(html, /font\/woff2;base64|Harmond|ENDMARK_LICENSED/);
+  const font = worker.fetch(new Request(origin+path));
+  assert.equal(font.headers.get('content-type'), 'font/ttf');
+  assert.match(font.headers.get('cache-control'), /immutable/);
+  assert.equal(createHash('sha256').update(Buffer.from(await font.arrayBuffer())).digest('hex'),
+    'a4fd542b56511b7e722a354ff31229e6203c818b1016da46a8f49c8addcbba7a');
+  const head = worker.fetch(new Request(origin+path, { method:'HEAD' }));
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), '');
+  assert.equal(worker.fetch(new Request(origin+path, { method:'POST' })).status,405);
+  assert.equal(worker.fetch(new Request(origin+'/assets/unknown')).status,404);
+  const notice = worker.fetch(new Request(origin+'/assets/BodoniModa-OFL.txt'));
+  assert.equal(notice.headers.get('content-type'), 'text/plain; charset=utf-8');
+  assert.equal(await notice.text(),await readFile(new URL('./assets/BodoniModa-OFL.txt',import.meta.url),'utf8'));
 });
