@@ -17,7 +17,7 @@ main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif
 .repro-endmark span{display:block;white-space:nowrap;margin-block:clamp(1.5rem,4.85cqi,2.1rem);font:520 29.85cqi/.88 "REPRO Bodoni Moda",Didot,Georgia,serif;color:#29271f;transform:translate(.01em,.028em)}
 @supports(background-clip:text){.repro-endmark span{background:linear-gradient(180deg,#29271f 0 72%,#514c3d 100%);background-clip:text;color:transparent}}
 @media(forced-colors:active){.repro-endmark span{background:none;color:CanvasText}}
-/* One text clip for both states. At full hover, every part of the ink is gold. */
+/* One text clip for both states. Only the area around the pointer catches the light. */
 @property --foil-strength {
   syntax:"<number>";
   inherits:false;
@@ -29,10 +29,12 @@ main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif
       --foil-strength:0;
       transition:--foil-strength .32s ease-out;
       background-image:
-        radial-gradient(ellipse 67% 155% at var(--foil-x,50%) var(--foil-y,50%),
+        radial-gradient(ellipse 32% 93% at var(--foil-x,50%) var(--foil-y,50%),
           rgb(224 180 87 / var(--foil-strength)) 0%,
-          rgb(207 153 55 / var(--foil-strength)) 48%,
-          rgb(170 117 33 / var(--foil-strength)) 100%),
+          rgb(207 153 55 / var(--foil-strength)) 42%,
+          rgb(188 135 43 / calc(.62 * var(--foil-strength))) 63%,
+          rgb(175 120 36 / calc(.19 * var(--foil-strength))) 82%,
+          rgb(175 120 36 / 0) 100%),
         linear-gradient(180deg,#29271f 0 72%,#514c3d 100%);
     }
     .repro-endmark span[data-foil]{--foil-strength:1;transition-duration:.08s}
