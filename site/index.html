@@ -40,11 +40,29 @@ main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif
     .repro-endmark span[data-foil]{--foil-strength:1;transition-duration:.08s}
   }
 }
+/* The final ruler badge becomes an action on the closing rule. */
+.repro-finish-link{position:absolute;inset-block-start:0;inset-inline-start:50%;transform:translateX(-50%);z-index:1;display:inline-flex;align-items:center;gap:.75em;min-block-size:28px;padding:0 10px;background:#76500e;color:#fffaf0;font:600 .66rem/1 var(--mono);letter-spacing:.035em;text-decoration:none;white-space:nowrap}
+.repro-finish-link:hover{background:#553705}
+.repro-finish-link:focus-visible{outline:2px solid #fffaf0;outline-offset:-4px}
+.repro-finish-sentinel{position:absolute;inset:auto auto 0 0;width:1px;height:1px;pointer-events:none}
+html[data-repro-finish-watch]:not([data-repro-complete]) .repro-finish-link:not(:focus){display:none}
+html[data-repro-complete] .repro-endmark-band{border-top-color:#76500e}
+html[data-repro-complete] #minimap-island .line-minimap__guide span,html[data-repro-complete] #minimap-island .line-minimap__guide:before{visibility:hidden}
+@media(forced-colors:active){.repro-finish-link{background:Canvas;color:LinkText;border:1px solid LinkText}.repro-finish-link:focus-visible{outline-color:Highlight}}
+/* One marker moves through the article; it does not take part in text layout. */
+#intro{position:relative}
+.repro-section-dot{position:absolute;z-index:1;inset:0 auto auto 0;width:8px;height:8px;border-radius:50%;background:#a16d17;pointer-events:none;opacity:0;transform:translate3d(var(--dot-x,0),var(--dot-y,0),0)}
+.repro-section-dot[data-positioned]{opacity:1}
+.repro-section-dot[data-ready]{transition:transform .34s cubic-bezier(.24,.83,.26,1)}
+@media(max-width:767px){.repro-section-dot{width:7px;height:7px}}
+@media(prefers-reduced-motion:reduce){.repro-section-dot[data-ready]{transition:none}}
+@media(forced-colors:active){.repro-section-dot{background:CanvasText;border:1px solid CanvasText}}
 /* BEGIN GENERATED MINIMAP CSS */
 line-minimap{--minimap-inset: 32px;--minimap-minor: 24px;--minimap-major: 40px;--minimap-mark: #777d76;--minimap-strong: #242624;--minimap-accent: #234ac6;--minimap-on-accent: #faf7ef;--minimap-progress: 0;position:fixed;z-index:2;inset-inline-start:var(--minimap-inset);inset-block-start:50%;display:block;transform:translateY(-50%);width:92px;height:min(315px,56dvh);font:11px/1 ui-monospace,monospace}.line-minimap__track,.line-minimap__ticks{position:absolute;inset:0}.line-minimap__ticks{display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}.line-minimap__ticks span{display:block;background:var(--minimap-mark);width:var(--minimap-minor);height:1px;transform:scaleX(var(--tick-scale, 1));transform-origin:left;transition:transform .17s cubic-bezier(.2,.75,.35,1),background-color .13s ease}.line-minimap__ticks .line-minimap__major{width:var(--minimap-major);background:var(--minimap-strong)}.line-minimap__ticks .line-minimap__nearest{background:var(--minimap-accent)}.line-minimap__guide{position:absolute;inset:0 auto 0 0;width:calc(100vw - var(--minimap-inset) * 2);transform:translateY(calc(var(--minimap-progress) * (100% - 1px)));pointer-events:none}.line-minimap__guide:before{content:"";position:absolute;inset:0 0 auto;height:1px;background:color-mix(in srgb,var(--minimap-accent) 43%,transparent)}.line-minimap__guide:after{content:"";position:absolute;inset:-2px auto auto -12px;width:5px;height:5px;transform:rotate(45deg);background:var(--minimap-accent)}.line-minimap__guide span{position:absolute;inset:0 0 auto auto;min-width:4ch;padding:5px 7px;text-align:center;color:var(--minimap-on-accent);background:var(--minimap-accent)}.line-minimap__range{appearance:none;writing-mode:vertical-lr;position:absolute;inset:-8px 0 -8px -12px;width:calc(100% + 12px);height:calc(100% + 16px);margin:0;opacity:0;cursor:ns-resize;touch-action:none}.line-minimap__range:active{cursor:grabbing}.line-minimap__track:has(:focus-visible){outline:2px solid var(--minimap-accent);outline-offset:5px}line-minimap[data-idle]{visibility:hidden}@media(prefers-color-scheme:dark){line-minimap{--minimap-mark: #9ba2aa;--minimap-strong: #f5f0e6;--minimap-accent: #a5b6ff;--minimap-on-accent: #1c1f23}}@media(max-width:760px){line-minimap{--minimap-inset: 14px;--minimap-minor: 9px;--minimap-major: 14px;width:32px;height:min(260px,46dvh)}.line-minimap__guide{width:27px}.line-minimap__guide:after{inset-inline-start:-8px}.line-minimap__guide span{inset:5px auto auto 0;min-width:0;padding:3px}.line-minimap__ticks span{transform:scaleX(min(1.75,var(--tick-scale, 1)))}}@media(prefers-reduced-motion:reduce){.line-minimap__ticks span{transition:none}}html.lenis,html.lenis body{height:auto}.lenis:not(.lenis-autoToggle).lenis-stopped{overflow:clip}.lenis [data-lenis-prevent],.lenis [data-lenis-prevent-wheel],.lenis [data-lenis-prevent-touch],.lenis [data-lenis-prevent-vertical],.lenis [data-lenis-prevent-horizontal]{overscroll-behavior:contain}.lenis.lenis-smooth iframe{pointer-events:none}.lenis.lenis-autoToggle{transition-property:overflow;transition-duration:1ms;transition-behavior:allow-discrete}#minimap-island line-minimap{--minimap-mark: #787c74;--minimap-strong: #242624;--minimap-accent: #926516;--minimap-on-accent: #faf7ef}#minimap-island .line-minimap__guide:before{background:color-mix(in srgb,var(--minimap-accent) 76%,transparent)}#minimap-island .line-minimap__guide:after{inset-block-start:-4px;width:8px;height:9px;transform:none;clip-path:polygon(0 0,100% 50%,0 100%)}html.lenis{scroll-behavior:auto}
 /* END GENERATED MINIMAP CSS */
 </style></head><body>
 <div class="wrap" id="intro">
+<span class="repro-section-dot" aria-hidden="true"></span>
 <div id="minimap-island"></div>
 <noscript><nav aria-label="On this page"><ul class="no-js-jump"><li><a href="#intro">Intro</a></li><li><a href="#file">File</a></li><li><a href="#workflow">How it works</a></li><li><a href="#limits">Limits</a></li></ul></nav></noscript>
 <main>
@@ -75,7 +93,7 @@ line-minimap{--minimap-inset: 32px;--minimap-minor: 24px;--minimap-major: 40px;-
 <p>I’m keeping the example to one synthetic checkout. The two results show what changed for that fixture, not what happens on every checkout, with every account, or in production. The public page shows saved evidence; it doesn’t run a checkout on your behalf.</p></section>
 <p class="small" id="limits">The included checkout fixture is the only supported target today. No hosted runner, uploads, or public installer.</p>
 </main><footer class="footer">A project note from <a href="https://querencia.art/">0xque</a>.</footer></div>
-<div class="repro-endmark-band"><div class="wrap"><div id="repro-endmark" class="repro-endmark"><span>REPRO</span></div></div></div>
+<div class="repro-endmark-band"><i class="repro-finish-sentinel" aria-hidden="true"></i><a class="repro-finish-link" href="https://github.com/0xQuerencia/repro" title="Private repository. GitHub access required." aria-label="REPRO on GitHub (private repository, access required)">REPRO ON GITHUB <span aria-hidden="true">↗</span></a><div class="wrap"><div id="repro-endmark" class="repro-endmark"><span>REPRO</span></div></div></div>
 <script>
 const copy = document.getElementById('copy');
 if(navigator.clipboard?.writeText){copy.classList.add('ready');copy.addEventListener('click',async()=>{const status=document.getElementById('copy-state');try{await navigator.clipboard.writeText(document.getElementById('cmd').textContent);status.textContent='Copied.';}catch{status.textContent='Could not copy. Select the command text to copy it.';}});}
@@ -110,6 +128,59 @@ if(navigator.clipboard?.writeText){copy.classList.add('ready');copy.addEventList
   mark.addEventListener('pointercancel', clear);
   window.addEventListener('blur', clear);
   enabled.addEventListener('change', clear);
+})();
+(() => {
+  if (!('IntersectionObserver' in window)) return;
+  const end = document.querySelector('.repro-finish-sentinel');
+  const root = document.documentElement;
+  root.setAttribute('data-repro-finish-watch', '');
+  const observer = new IntersectionObserver(([entry]) => {
+    root.toggleAttribute('data-repro-complete', entry.isIntersecting && entry.intersectionRatio >= .99);
+  }, { rootMargin:'0px 0px 1px 0px', threshold:.99 });
+  observer.observe(end);
+})();
+(() => {
+  const article = document.getElementById('intro');
+  const dot = article.querySelector('.repro-section-dot');
+  const headings = [...article.querySelectorAll('main > h1, .capsule > summary, .result > h2, .workflow > h2, .field-note > h2')];
+  let active, frame = 0, points = [], needsMeasure = true;
+  function paint() {
+    frame = 0;
+    if (needsMeasure) {
+      needsMeasure = false;
+      const box = article.getBoundingClientRect();
+      const diameter = dot.offsetWidth;
+      points = headings.filter(heading => heading.getClientRects().length).map(heading => {
+        const rect = heading.getBoundingClientRect();
+        const line = Number.parseFloat(getComputedStyle(heading).lineHeight) || rect.height;
+        return { heading, x: rect.left - box.left - 13 - diameter / 2,
+          y: rect.top - box.top + Math.min(rect.height, line) / 2 - diameter / 2 };
+      });
+    }
+    if (!points.length) return;
+    const readingLine = innerHeight * .44 - article.getBoundingClientRect().top;
+    let target = points[0];
+    for (const point of points) {
+      if (point.y <= readingLine) target = point;
+    }
+    if (active && active.heading === target.heading && active.x === target.x && active.y === target.y) return;
+    active = target;
+    dot.style.setProperty('--dot-x', target.x + 'px');
+    dot.style.setProperty('--dot-y', target.y + 'px');
+    if (!dot.hasAttribute('data-positioned')) {
+      dot.setAttribute('data-positioned', '');
+      requestAnimationFrame(() => dot.setAttribute('data-ready', ''));
+    }
+  }
+  function schedule() { if (!frame) frame = requestAnimationFrame(paint); }
+  function measure() { needsMeasure = true; schedule(); }
+  window.addEventListener('scroll', schedule, { passive:true });
+  window.addEventListener('resize', measure, { passive:true });
+  window.addEventListener('pageshow', measure);
+  article.addEventListener('toggle', measure, true);
+  if ('ResizeObserver' in window) new ResizeObserver(measure).observe(article);
+  if (document.fonts) document.fonts.ready.then(measure);
+  schedule();
 })();
 /* BEGIN GENERATED MINIMAP JS */
 (()=>{var $c=Object.create;var Zo=Object.defineProperty;var Qc=Object.getOwnPropertyDescriptor;var Yc=Object.getOwnPropertyNames;var Xc=Object.getPrototypeOf,Kc=Object.prototype.hasOwnProperty;var Gc=(e,t,n)=>()=>{if(n)throw n[0];try{return e&&(t=e(e=0)),t}catch(r){throw n=[r],r}};var gt=(e,t)=>()=>{try{return t||e((t={exports:{}}).exports,t),t.exports}catch(n){throw t=0,n}};var Zc=(e,t,n,r)=>{if(t&&typeof t=="object"||typeof t=="function")for(let i of Yc(t))!Kc.call(e,i)&&i!==n&&Zo(e,i,{get:()=>t[i],enumerable:!(r=Qc(t,i))||r.enumerable});return e};var Li=(e,t,n)=>(n=e!=null?$c(Xc(e)):{},Zc(t||!e||!e.__esModule?Zo(n,"default",{value:e,enumerable:!0}):n,e));var us=gt(N=>{"use strict";/**
