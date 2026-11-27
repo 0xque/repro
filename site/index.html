@@ -17,6 +17,24 @@ main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif
 .repro-endmark span{display:block;white-space:nowrap;margin-block:clamp(1.5rem,4.85cqi,2.1rem);font:520 29.85cqi/.88 "REPRO Bodoni Moda",Didot,Georgia,serif;color:#29271f;transform:translate(.01em,.028em)}
 @supports(background-clip:text){.repro-endmark span{background:linear-gradient(180deg,#29271f 0 72%,#514c3d 100%);background-clip:text;color:transparent}}
 @media(forced-colors:active){.repro-endmark span{background:none;color:CanvasText}}
+/* A directional foil reflection clipped to the letterforms, never the paper. */
+@media (any-hover:hover) and (any-pointer:fine) and (prefers-reduced-motion:no-preference) and (forced-colors:none){
+  @supports (background-clip:text) and (mask-image:radial-gradient(black,transparent)){
+    .repro-endmark span::after{
+      content:"REPRO" / "";
+      position:absolute;inset:0;pointer-events:none;
+      opacity:0;transition:opacity .38s ease-out;
+      background:
+        repeating-linear-gradient(172deg,transparent 0 1px,#41230632 2px,transparent 3px 4px),
+        linear-gradient(113deg,#63420d 0%,#b38331 32%,#e2bc68 45%,#fcdf98 50%,#b3812c 59%,#775016 77%,#c79d4a 100%);
+      background-size:100% 100%,160% 100%;
+      background-position:center,var(--foil-shift,50%) center;
+      background-clip:text;color:transparent;
+      mask-image:radial-gradient(ellipse 32% 93% at var(--foil-x,50%) var(--foil-y,50%),#000 0 20%,#000d 43%,#0006 71%,transparent 100%);
+    }
+    .repro-endmark span[data-foil]::after{opacity:1;transition-duration:.11s}
+  }
+}
 /* BEGIN GENERATED MINIMAP CSS */
 line-minimap{--minimap-inset: 32px;--minimap-minor: 24px;--minimap-major: 40px;--minimap-mark: #777d76;--minimap-strong: #242624;--minimap-accent: #234ac6;--minimap-on-accent: #faf7ef;--minimap-progress: 0;position:fixed;z-index:2;inset-inline-start:var(--minimap-inset);inset-block-start:50%;display:block;transform:translateY(-50%);width:92px;height:min(315px,56dvh);font:11px/1 ui-monospace,monospace}.line-minimap__track,.line-minimap__ticks{position:absolute;inset:0}.line-minimap__ticks{display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}.line-minimap__ticks span{display:block;background:var(--minimap-mark);width:var(--minimap-minor);height:1px;transform:scaleX(var(--tick-scale, 1));transform-origin:left;transition:transform .17s cubic-bezier(.2,.75,.35,1),background-color .13s ease}.line-minimap__ticks .line-minimap__major{width:var(--minimap-major);background:var(--minimap-strong)}.line-minimap__ticks .line-minimap__nearest{background:var(--minimap-accent)}.line-minimap__guide{position:absolute;inset:0 auto 0 0;width:calc(100vw - var(--minimap-inset) * 2);transform:translateY(calc(var(--minimap-progress) * (100% - 1px)));pointer-events:none}.line-minimap__guide:before{content:"";position:absolute;inset:0 0 auto;height:1px;background:color-mix(in srgb,var(--minimap-accent) 43%,transparent)}.line-minimap__guide:after{content:"";position:absolute;inset:-2px auto auto -12px;width:5px;height:5px;transform:rotate(45deg);background:var(--minimap-accent)}.line-minimap__guide span{position:absolute;inset:0 0 auto auto;min-width:4ch;padding:5px 7px;text-align:center;color:var(--minimap-on-accent);background:var(--minimap-accent)}.line-minimap__range{appearance:none;writing-mode:vertical-lr;position:absolute;inset:-8px 0 -8px -12px;width:calc(100% + 12px);height:calc(100% + 16px);margin:0;opacity:0;cursor:ns-resize;touch-action:none}.line-minimap__range:active{cursor:grabbing}.line-minimap__track:has(:focus-visible){outline:2px solid var(--minimap-accent);outline-offset:5px}line-minimap[data-idle]{visibility:hidden}@media(prefers-color-scheme:dark){line-minimap{--minimap-mark: #9ba2aa;--minimap-strong: #f5f0e6;--minimap-accent: #a5b6ff;--minimap-on-accent: #1c1f23}}@media(max-width:760px){line-minimap{--minimap-inset: 14px;--minimap-minor: 9px;--minimap-major: 14px;width:32px;height:min(260px,46dvh)}.line-minimap__guide{width:27px}.line-minimap__guide:after{inset-inline-start:-8px}.line-minimap__guide span{inset:5px auto auto 0;min-width:0;padding:3px}.line-minimap__ticks span{transform:scaleX(min(1.75,var(--tick-scale, 1)))}}@media(prefers-reduced-motion:reduce){.line-minimap__ticks span{transition:none}}html.lenis,html.lenis body{height:auto}.lenis:not(.lenis-autoToggle).lenis-stopped{overflow:clip}.lenis [data-lenis-prevent],.lenis [data-lenis-prevent-wheel],.lenis [data-lenis-prevent-touch],.lenis [data-lenis-prevent-vertical],.lenis [data-lenis-prevent-horizontal]{overscroll-behavior:contain}.lenis.lenis-smooth iframe{pointer-events:none}.lenis.lenis-autoToggle{transition-property:overflow;transition-duration:1ms;transition-behavior:allow-discrete}#minimap-island line-minimap{--minimap-mark: #787c74;--minimap-strong: #242624;--minimap-accent: #926516;--minimap-on-accent: #faf7ef}#minimap-island .line-minimap__guide:before{background:color-mix(in srgb,var(--minimap-accent) 76%,transparent)}#minimap-island .line-minimap__guide:after{inset-block-start:-4px;width:8px;height:9px;transform:none;clip-path:polygon(0 0,100% 50%,0 100%)}html.lenis{scroll-behavior:auto}
 /* END GENERATED MINIMAP CSS */
@@ -56,6 +74,39 @@ line-minimap{--minimap-inset: 32px;--minimap-minor: 24px;--minimap-major: 40px;-
 <script>
 const copy = document.getElementById('copy');
 if(navigator.clipboard?.writeText){copy.classList.add('ready');copy.addEventListener('click',async()=>{const status=document.getElementById('copy-state');try{await navigator.clipboard.writeText(document.getElementById('cmd').textContent);status.textContent='Copied.';}catch{status.textContent='Could not copy. Select the command text to copy it.';}});}
+(() => {
+  const mark = document.querySelector('#repro-endmark span');
+  const enabled = matchMedia('(any-hover:hover) and (any-pointer:fine) and (prefers-reduced-motion:no-preference) and (forced-colors:none)');
+  if (!CSS.supports('background-clip:text') || !CSS.supports('mask-image:radial-gradient(black,transparent)')) return;
+  let frame = 0;
+  let point;
+  const clear = () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+    point = undefined;
+    mark.removeAttribute('data-foil');
+  };
+  mark.addEventListener('pointermove', (event) => {
+    if (!enabled.matches || event.pointerType !== 'mouse') return;
+    point = { x: event.clientX, y: event.clientY };
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const bounds = mark.getBoundingClientRect();
+      const percent = (n) => Math.max(0, Math.min(100, n * 100));
+      const x = percent((point.x - bounds.left) / bounds.width);
+      const y = percent((point.y - bounds.top) / bounds.height);
+      mark.style.setProperty('--foil-x', x.toFixed(1) + '%');
+      mark.style.setProperty('--foil-y', y.toFixed(1) + '%');
+      mark.style.setProperty('--foil-shift', (25 + x * .5).toFixed(1) + '%');
+      mark.setAttribute('data-foil', '');
+    });
+  }, { passive:true });
+  mark.addEventListener('pointerleave', clear);
+  mark.addEventListener('pointercancel', clear);
+  window.addEventListener('blur', clear);
+  enabled.addEventListener('change', clear);
+})();
 /* BEGIN GENERATED MINIMAP JS */
 (()=>{var $c=Object.create;var Zo=Object.defineProperty;var Qc=Object.getOwnPropertyDescriptor;var Yc=Object.getOwnPropertyNames;var Xc=Object.getPrototypeOf,Kc=Object.prototype.hasOwnProperty;var Gc=(e,t,n)=>()=>{if(n)throw n[0];try{return e&&(t=e(e=0)),t}catch(r){throw n=[r],r}};var gt=(e,t)=>()=>{try{return t||e((t={exports:{}}).exports,t),t.exports}catch(n){throw t=0,n}};var Zc=(e,t,n,r)=>{if(t&&typeof t=="object"||typeof t=="function")for(let i of Yc(t))!Kc.call(e,i)&&i!==n&&Zo(e,i,{get:()=>t[i],enumerable:!(r=Qc(t,i))||r.enumerable});return e};var Li=(e,t,n)=>(n=e!=null?$c(Xc(e)):{},Zc(t||!e||!e.__esModule?Zo(n,"default",{value:e,enumerable:!0}):n,e));var us=gt(N=>{"use strict";/**
  * @license React
