@@ -1,20 +1,20 @@
 /* REPRO stays on light paper regardless of the system color scheme. */
 #minimap-island line-minimap {
-  --ruler-height: min(315px,56dvh,max(1px,calc(var(--ruler-limit,100dvh) - 12px)));
+  --ruler-height: min(315px,52dvh);
   block-size: var(--ruler-height);
-  inset-block-start: min(50%,calc(var(--ruler-limit,100dvh) - var(--ruler-height) / 2));
+  inset-block-start: var(--ruler-center,50dvh);
   --minimap-mark: #787c74;
   --minimap-strong: #242624;
   --minimap-accent: #926516;
   --minimap-on-accent: #faf7ef;
 }
-@media(max-width:928px){
+@media(max-width:1050px),(max-height:520px){
   #minimap-island line-minimap{
-    --minimap-inset: 14px;
+    --minimap-inset: 8px;
     --minimap-minor: 9px;
     --minimap-major: 14px;
     inline-size: 28px;
-    --ruler-height: min(260px,46dvh,max(1px,calc(var(--ruler-limit,100dvh) - 12px)));
+    --ruler-height: min(220px,42dvh);
   }
 }
 #minimap-island .line-minimap__guide::before,
@@ -30,3 +30,10 @@
 
 /* Lenis owns easing while active; otherwise preserve native page scrolling. */
 html.lenis { scroll-behavior: auto; }
+
+@media(max-width:600px){
+  #minimap-island line-minimap{display:none}
+}
+@media(min-width:1850px) and (min-aspect-ratio:2/1){
+  #minimap-island line-minimap{--minimap-inset:max(32px,calc((100% - var(--editorial-spread))/2 - 125px))}
+}

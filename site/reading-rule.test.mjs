@@ -14,10 +14,15 @@ const matrix = [
   ['landscape', 844, 390, true],
   ['tablet-768', 768, 1024, true],
   ['tablet-820', 820, 1180, true],
+  ['tablet-landscape', 1024, 768, true],
+  ['laptop', 1366, 768, false],
   ['wide-short', 1440, 320, false],
   ['desktop', 1440, 900, false],
   ['tall', 1440, 1700, false],
   ['fractional', 1023, 687, false],
+  ['editorial-1920', 1920, 840, false],
+  ['editorial-2560', 2560, 1080, false],
+  ['editorial-3440', 3440, 1440, false],
 ];
 
 const near = (a, b, tolerance = 1) => assert.ok(Math.abs(a - b) <= tolerance, `${a} differs from ${b}`);
@@ -32,8 +37,29 @@ async function read(page) {
     const tracked = rule.hasAttribute('data-tracking');
     const ruleRight = tracked ? left + Number(rule.style.getPropertyValue('--rule-width')) : right;
     const viewport = document.documentElement;
+    const rail = document.querySelector('line-minimap');
+    const ink = document.querySelector('.repro-endmark span').getBoundingClientRect();
+    const label = tab.querySelector('.repro-finish-label').getBoundingClientRect();
+    const labelText = tab.querySelector('.repro-finish-text');
+    const labelTextRect = labelText.getBoundingClientRect();
+    const pocket = matchMedia('(max-width:600px)').matches;
+    const viewportCenter = visualViewport.offsetTop + visualViewport.height / 2;
+    const railBox = rail.getBoundingClientRect();
+    const overlaps = [...document.querySelectorAll('main h1, main h2, main p, main li, summary, .artifact code, .footer')]
+      .filter(node => node.getClientRects().length && (!node.closest('details') || node.closest('details').open || node.closest('summary')))
+      .some(node => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        return [...range.getClientRects()].some(rect => Math.min(x + width, rect.right) - Math.max(x, rect.left) > .5 &&
+          Math.min(y + height, rect.bottom) - Math.max(y, rect.top) > .5);
+      });
     return {
-      x, y, width, height, left, top, ruleRight, tracked,
+      x, y, width, height, left, top, ruleRight, tracked, pocket, overlaps,
+      railDisplay: getComputedStyle(rail).display, railCenter: (railBox.top + railBox.bottom) / 2, viewportCenter,
+      progressLine: getComputedStyle(rule, '::after').transform,
+      inkFits: ink.left >= footer.left && ink.right <= footer.right && ink.top >= footer.top && ink.bottom <= footer.bottom,
+      labelFits: Number(getComputedStyle(labelText).opacity) === 0 ||
+        (labelTextRect.left >= label.left - .1 && labelTextRect.right <= label.right + .1),
       footerTop: footer.top, footerLeft: footer.left, footerRight: footer.right,
       viewportWidth: viewport.clientWidth, viewportHeight: viewport.clientHeight,
       scrollWidth: viewport.scrollWidth,
@@ -57,7 +83,20 @@ async function step(page, fraction) {
   const state = await read(page);
   assert.equal(state.linkCount, 1);
   assert.equal(state.badge, 'none');
-  near(state.y, state.top + 1);
+  if (state.pocket) {
+    assert.equal(state.railDisplay, 'none');
+    if (state.tracked) {
+      near(state.y, 0, .05);
+      near(state.y + state.height, 44, .05);
+      near(state.x + state.width / 2, state.viewportWidth / 2, .05);
+    } else near(state.y, state.top + 1);
+  } else {
+    assert.notEqual(state.railDisplay, 'none');
+    near(state.railCenter, state.viewportCenter);
+    near(state.y, state.top + 1);
+    assert.equal(state.overlaps, false, 'tab does not cross visible article text');
+  }
+  assert.ok(state.labelFits, 'visible label fits during the sweep');
   assert.ok(state.height >= 43.99 && state.hit, '44 px target receives hits');
   assert.ok(state.x >= 0 && state.x + state.width <= state.viewportWidth + .1);
   assert.ok(state.y >= 0 && state.y + state.height <= state.viewportHeight + .1);
@@ -67,6 +106,7 @@ async function step(page, fraction) {
 
 function docked(state) {
   assert.equal(state.tracked, false);
+  assert.ok(state.inkFits, 'wordmark fits inside its footer band');
   near(state.top, state.footerTop, .05);
   near(state.left, state.footerLeft, .05);
   near(state.ruleRight, state.footerRight, .05);
@@ -105,31 +145,67 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
         assert.equal(await tab.getAttribute('href'), target);
         const start = await step(page, -1);
         assert.equal(start.tracked, true);
-        near(start.x + start.width, start.ruleRight);
+        if (!start.pocket) near(start.x + start.width, start.ruleRight);
         const outward = [start];
-        for (const fraction of [.25, .5, .75, .93, 1]) outward.push(await step(page, fraction));
-        docked(outward.at(-1));
-        for (let i = 1; i < outward.length; i++) {
-          const before = outward[i - 1], after = outward[i];
-          assert.ok(after.top + .5 >= before.top, 'rule descends');
-          assert.ok(after.ruleRight - after.left >= before.ruleRight - before.left - .2, 'rule widens');
-          assert.ok(after.x <= before.x + .2, 'tab approaches center');
+        for (let i = 1; i < 20; i++) outward.push(await step(page, i / 20));
+        const end = await step(page, 1);
+        docked(end);
+        if (start.pocket) assert.notEqual(outward[10].progressLine, start.progressLine);
+        else {
+          for (let i = 1; i < outward.length; i++) {
+            const before = outward[i - 1], after = outward[i];
+            assert.ok(after.ruleRight - after.left >= before.ruleRight - before.left - .2, 'rule widens');
+          }
         }
         const returning = await step(page, .5);
-        near(returning.x, outward[2].x, .05);
-        near(returning.top, outward[2].top, .05);
-        if (screenshots && ['phone-390', 'desktop'].includes(name)) {
-          for (const [position, fraction] of [['reading', -1], ['glide', .5], ['docked', 1]]) {
+        near(returning.x, outward[10].x, .05);
+        near(returning.top, outward[10].top, .05);
+        const startAgain = await step(page, -1);
+        near(startAgain.x, start.x, .05);
+        near(startAgain.y, start.y, .05);
+        if (name.startsWith('editorial')) {
+          const editorial = await page.evaluate(() => {
+            const proof = document.querySelectorAll('#file');
+            const heading = document.querySelector('main h1').getBoundingClientRect();
+            const paragraph = document.querySelector('.lede').getBoundingClientRect();
+            return { count: proof.length, open: proof[0].open, proof: proof[0].getBoundingClientRect().left,
+              heading: heading.right, measure: paragraph.width,
+              wordmark: document.querySelector('.repro-endmark-band .wrap').getBoundingClientRect().width };
+          });
+          assert.equal(editorial.count, 1);
+          assert.ok(editorial.open && editorial.proof > editorial.heading);
+          assert.ok(editorial.measure <= 680 && editorial.wordmark >= 980);
+        }
+        if (screenshots) {
+          for (const [position, fraction] of [['reading', -1], ['glide', .75], ['docked', 1]]) {
             await step(page, fraction);
+            await page.locator('.repro-section-dot').evaluate(async dot => {
+              await Promise.allSettled(dot.getAnimations({ subtree: true }).map(animation => animation.finished));
+            });
             await page.screenshot({ path: join(screenshots, name + '-' + position + '.png'), scale: 'css' });
           }
         }
         if (name === 'phone-390') {
+          await step(page, -1);
+          const client = await page.context().newCDPSession(page);
+          await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 180, y: 480 }] });
+          for (const y of [435, 385, 335, 290]) {
+            await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 180, y }] });
+          }
+          await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+          await page.waitForFunction(() => scrollY > 100);
+          await client.detach();
           await page.setViewportSize({ width: height, height: width });
-          await step(page, .5);
+          assert.equal((await step(page, .5)).pocket, false);
           docked(await step(page, 1));
           await page.setViewportSize({ width, height });
+          assert.equal((await step(page, -1)).pocket, true);
           docked(await step(page, 1));
+          await page.locator('.footer a').focus();
+          await page.keyboard.press('Tab');
+          assert.equal(await tab.evaluate(link => link === document.activeElement), true);
+          assert.equal(await step(page, -1).then(state => state.tracked), true);
+          assert.equal(await tab.evaluate(link => link === document.activeElement), true);
           let tapped = false;
           await page.route(target, route => { tapped = true; return route.fulfill({ body: 'GitHub destination' }); });
           await tab.tap();
@@ -161,6 +237,18 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
           await page.route(target, route => route.fulfill({ body: 'GitHub destination' }));
           await page.keyboard.press('Enter');
           await page.waitForURL(target);
+        }
+        if (name === 'editorial-2560') {
+          await step(page, -1);
+          const summary = page.locator('#file > summary');
+          await summary.click();
+          await page.waitForFunction(() => !document.querySelector('#file').open);
+          await page.setViewportSize({ width: 1366, height: 768 });
+          await page.setViewportSize({ width, height });
+          assert.equal(await page.locator('#file').evaluate(proof => proof.open), false);
+          await summary.focus();
+          await page.keyboard.press('Enter');
+          assert.equal(await page.locator('#file').evaluate(proof => proof.open), true);
         }
         assert.deepEqual(errors, []);
       } finally {
