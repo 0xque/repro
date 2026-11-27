@@ -1,3 +1,5 @@
+import { measureSpecimen, specimenSpring } from './specimen-spring.js';
+
 const mix = (from, to, weight) => from + (to - from) * weight;
 const unit = (value) => Math.max(0, Math.min(1, value));
 const ease = (value) => {
@@ -11,6 +13,7 @@ export function mountReadingRule(ruler) {
   const scroller = document.scrollingElement || root;
   const article = document.getElementById('intro');
   const proof = document.getElementById('file');
+  const dot = article.querySelector('.repro-section-dot');
   const rule = document.querySelector('.repro-reading-rule');
   const footer = rule.parentElement;
   const pocket = matchMedia('(max-width:600px)');
@@ -41,19 +44,21 @@ export function mountReadingRule(ruler) {
     const height = root.clientHeight;
     const width = root.clientWidth;
     const rail = ruler.getBoundingClientRect();
-    const { left, right } = article.getBoundingClientRect();
+    const { left, right, top } = article.getBoundingClientRect();
+    const articleTop = top + scroller.scrollTop;
+    const specimen = measureSpecimen(proof, article, scroller.scrollTop);
     const endY = Math.max(0, height - footer.getBoundingClientRect().height);
     // The wordmark reserves room for the larger label after docking.
     const tabWidth = 9 * Number.parseFloat(getComputedStyle(root).fontSize);
     const compactTab = compact.matches || width - right < tabWidth + 24;
-    geometry = { height, width, rail, left, right, endY, compactTab, tabWidth };
+    geometry = { height, width, rail, left, right, articleTop, endY, compactTab, tabWidth, specimen, diameter: dot.getBoundingClientRect().width };
     rule.toggleAttribute('data-compact-tab', compactTab && !pocket.matches);
   }
 
   function paint() {
     frame = 0;
     if (!geometry) measure();
-    const { height, width, rail, left, right, endY, compactTab, tabWidth } = geometry;
+    const { height, width, rail, left, right, articleTop, endY, compactTab, tabWidth, specimen, diameter } = geometry;
     const distance = Math.max(0, scroller.scrollHeight - height);
     const reading = distance ? unit(scroller.scrollTop / distance) : 1;
     const remaining = Math.max(0, distance - scroller.scrollTop);
@@ -63,6 +68,21 @@ export function mountReadingRule(ruler) {
     if (pocket.matches) rule.style.setProperty('--pocket-progress', reading);
     else ruler.style.setProperty('--ruler-handoff', ease(progress));
 
+    const spring = tracking && progress === 0 && !pocket.matches && !motion.matches && !proof.open
+      ? specimenSpring(specimen, { scrollTop: scroller.scrollTop, distance, rail, height, diameter })
+      : null;
+    if (spring && !dot.hasAttribute('data-specimen-spring')) {
+      dot.firstElementChild.getAnimations?.().forEach(animation => animation.cancel());
+    }
+    rule.toggleAttribute('data-specimen-docked', !!spring?.locked);
+    dot.toggleAttribute('data-specimen-spring', !!spring);
+    if (spring) {
+      dot.style.setProperty('--spring-x', spring.x - left + 'px');
+      dot.style.setProperty('--spring-y', spring.dotTop - articleTop + scroller.scrollTop + 'px');
+      dot.style.setProperty('--spring-scale-y', spring.scaleY);
+      dot.style.setProperty('--spring-scale-x', 1 + (1 - spring.scaleY) * .8);
+      rule.style.setProperty('--specimen-border', specimen.border + 'px');
+    }
     if (tracking && !pocket.matches) {
       const guideY = Math.max(0, Math.min(rail.top + (rail.height - 1) * reading, height - 45));
       const gutterStart = compactTab ? 5 : rail.left;
@@ -71,10 +91,13 @@ export function mountReadingRule(ruler) {
       const descent = ease(progress * 2);
       const sweep = ease(progress * 2 - 1);
       const seam = Math.min(endY + remaining, height - 45);
-      const y = mix(guideY, seam, descent);
+      const y = spring?.y ?? mix(guideY, seam, descent);
+      const guideOrigin = rail.top + (rail.height - 1) * reading;
+      ruler.style.setProperty('--specimen-guide-offset', (spring ? y - guideOrigin : 0) + 'px');
       const x = mix(gutterStart, 0, sweep);
       const end = mix(Math.min(gutterEnd, width - 4), width, sweep);
-      const span = end - x;
+      const ruleEnd = spring ? mix(end, Math.max(end, specimen.right), spring.extension) : end;
+      const span = ruleEnd - x;
       rule.style.setProperty('--rule-x', x + 'px');
       rule.style.setProperty('--rule-y', y + 'px');
       rule.style.setProperty('--rule-width', span);
@@ -127,6 +150,9 @@ export function mountReadingRule(ruler) {
     proof.removeEventListener('toggle', onProofToggle);
     ruler.style.removeProperty('--ruler-handoff');
     ruler.style.removeProperty('--ruler-center');
+    ruler.style.removeProperty('--specimen-guide-offset');
+    dot.removeAttribute('data-specimen-spring');
+    rule.removeAttribute('data-specimen-docked');
     rule.removeAttribute('data-tracking');
     root.removeAttribute('data-reading-rule-ready');
   };

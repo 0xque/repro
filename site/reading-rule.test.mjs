@@ -262,6 +262,103 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
     });
   }
 
+  await t.test('specimen contact shares the border and the dot rebounds once', async t => {
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 }, deviceScaleFactor: 1.25 });
+    try {
+      await page.goto(url);
+      await page.waitForSelector('html[data-reading-rule-ready]', { state: 'attached' });
+      await page.evaluate(() => document.fonts.ready);
+      const frames = await page.evaluate(async () => {
+        const proof = document.getElementById('file');
+        const rule = document.querySelector('.repro-reading-rule');
+        const dot = document.querySelector('.repro-section-dot i');
+        const rail = document.querySelector('line-minimap');
+        const root = document.scrollingElement;
+        const border = parseFloat(getComputedStyle(proof).borderBottomWidth);
+        const track = rail.getBoundingClientRect();
+        const distance = root.scrollHeight - root.clientHeight;
+        const edge = proof.getBoundingClientRect().bottom - border;
+        const contact = Math.max((edge - track.top) / (1 + (track.height - 1) / distance), edge - (root.clientHeight - 45));
+        const samples = [];
+        for (let scroll = Math.max(0, Math.floor(contact) - 91); scroll <= contact + 144; scroll += 2) {
+          scrollTo({ top: scroll, behavior: 'instant' });
+          await new Promise(requestAnimationFrame);
+          await new Promise(requestAnimationFrame);
+          if (!dot.parentElement.hasAttribute('data-specimen-spring')) continue;
+          const line = rule.getBoundingClientRect(), marker = dot.getBoundingClientRect();
+          const row = proof.getBoundingClientRect(), ruler = rail.getBoundingClientRect();
+          samples.push({ scroll, y: line.top, bottom: marker.bottom, clearance: line.top - marker.bottom, border,
+            railCenter: (ruler.top + ruler.bottom) / 2,
+            scale: marker.height / dot.offsetHeight, docked: rule.hasAttribute('data-specimen-docked'),
+            borderDelta: line.top - (row.bottom - border), thickness: line.height,
+            markerX: marker.left + marker.width / 2,
+            expectedX: row.left - 15,
+            filenameY: proof.querySelector('.filename').getBoundingClientRect().top +
+              proof.querySelector('.filename').getBoundingClientRect().height / 2,
+            markerY: (marker.top + marker.bottom) / 2,
+            fullStroke: getComputedStyle(rule, '::before').maskImage === 'none',
+          });
+        }
+        return samples;
+      });
+      assert.ok(frames.length >= 60);
+      assert.ok(frames.every(frame => frame.bottom <= frame.y + .05), 'the dot never crosses the line');
+      assert.ok(frames.every(frame => Math.abs(frame.railCenter - 384) < .1));
+      const firstContact = frames.findIndex(frame => frame.docked);
+      assert.ok(firstContact >= 10);
+      for (let i = 1; i < firstContact; i++) {
+        assert.ok(frames[i].y >= frames[i - 1].y - .05, 'the approach line only moves downward');
+      }
+      const dockedFrames = frames.filter(frame => frame.docked);
+      assert.ok(dockedFrames.length > 20);
+      for (const frame of dockedFrames) {
+        near(frame.borderDelta, 0, .05);
+        near(frame.thickness, frame.border, .05);
+        assert.equal(frame.fullStroke, true);
+      }
+      const compression = dockedFrames.reduce((best, frame) => frame.scale < best.scale ? frame : best);
+      near(compression.clearance, 0, .05);
+      assert.ok(compression.scale < .73);
+      const apex = dockedFrames.reduce((best, frame) => frame.clearance > best.clearance ? frame : best);
+      const settled = dockedFrames.at(-1);
+      t.diagnostic(`${frames.length} sampled frames, ${dockedFrames.length} aligned border frames, compression at ${(compression.scale * 100).toFixed(1)}% height`);
+      assert.ok(apex.scroll > compression.scroll && apex.clearance > settled.clearance + 7);
+      near(settled.markerX, settled.expectedX, .05);
+      near(settled.markerY, settled.filenameY, .05);
+      const rebound = dockedFrames.filter(frame => frame.scroll > compression.scroll);
+      for (let i = 1; i < rebound.length; i++) {
+        const previous = rebound[i - 1], current = rebound[i];
+        assert.ok(current.scroll <= apex.scroll
+          ? current.clearance >= previous.clearance - .1
+          : current.clearance <= previous.clearance + .1, 'the rebound has exactly one apex');
+      }
+
+      for (const [name, sample] of [['drop', frames[Math.floor(firstContact / 2)]],
+        ['contact', compression], ['rebound', apex], ['settled', settled], ['reverse-contact', compression]]) {
+        await page.evaluate(scroll => scrollTo({ top: scroll, behavior: 'instant' }), sample.scroll);
+        await page.waitForFunction(({ y, bottom }) => {
+          const line = document.querySelector('.repro-reading-rule').getBoundingClientRect();
+          const dot = document.querySelector('.repro-section-dot i').getBoundingClientRect();
+          return Math.abs(line.top - y) < .05 && Math.abs(dot.bottom - bottom) < .05;
+        }, sample);
+        if (screenshots) await page.screenshot({ path: join(screenshots, 'specimen-' + name + '.png'), scale: 'css' });
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForFunction(() => !document.querySelector('[data-specimen-spring], [data-specimen-docked]'));
+      assert.equal(await page.locator('line-minimap').evaluate(rail => getComputedStyle(rail).display), 'none');
+      await page.setViewportSize({ width: 1366, height: 768 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.evaluate(scroll => scrollTo({ top: scroll, behavior: 'instant' }), compression.scroll);
+      await page.waitForFunction(() => !document.querySelector('[data-specimen-spring], [data-specimen-docked]'));
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.waitForSelector('[data-specimen-docked]', { state: 'attached' });
+      await page.locator('#file > summary').evaluate(summary => summary.click());
+      await page.waitForFunction(() => !document.querySelector('[data-specimen-spring], [data-specimen-docked]'));
+    } finally {
+      await page.close();
+    }
+  });
+
   await t.test('reduced motion and no-script footer', async () => {
     const reduced = await browser.newPage({ reducedMotion: 'reduce', viewport: { width: 390, height: 844 } });
     await reduced.goto(url);

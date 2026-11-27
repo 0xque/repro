@@ -21,7 +21,7 @@
 #minimap-island .line-minimap__guide span { display: none; }
 #minimap-island .line-minimap__guide::after {
   opacity: calc(1 - var(--ruler-handoff,0));
-  inset-block-start: -4px;
+  inset-block-start: calc(-4px + var(--specimen-guide-offset,0px));
   width: 8px;
   height: 9px;
   transform: none;
