@@ -447,6 +447,8 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       const marker = page.locator('.repro-section-dot[data-positioned]');
       const ink = marker.locator('i');
       await marker.waitFor({ state: 'visible' });
+      await step(page, .5);
+      await step(page, -1);
       const box = await marker.boundingBox();
       for (const direction of [-1, 1]) {
         await page.mouse.move(100, 100);
