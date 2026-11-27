@@ -1,0 +1,20 @@
+/* REPRO stays on light paper regardless of the system color scheme. */
+#minimap-island line-minimap {
+  --minimap-mark: #787c74;
+  --minimap-strong: #242624;
+  --minimap-accent: #926516;
+  --minimap-on-accent: #faf7ef;
+}
+#minimap-island .line-minimap__guide::before {
+  background: color-mix(in srgb, var(--minimap-accent) 76%, transparent);
+}
+#minimap-island .line-minimap__guide::after {
+  inset-block-start: -4px;
+  width: 8px;
+  height: 9px;
+  transform: none;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Lenis owns easing while active; otherwise preserve native page scrolling. */
+html.lenis { scroll-behavior: auto; }
