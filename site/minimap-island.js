@@ -7,5 +7,4 @@ import './minimap-theme.css';
 const root = document.getElementById('minimap-island');
 createRoot(root).render(createElement(LineMinimap, {
   label: 'REPRO article reading progress',
-  className: 'repro-minimap',
 }));

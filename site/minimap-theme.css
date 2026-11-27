@@ -1,49 +1,57 @@
-line-minimap.repro-minimap {
+#minimap-island line-minimap {
   --minimap-inset: 22px;
   --minimap-minor: 15px;
   --minimap-major: 23px;
   --minimap-mark: #a4a69f;
-  --minimap-strong: var(--ink);
-  --minimap-accent: #a05c35;
+  --minimap-strong: #242924;
+  --minimap-accent: #914918;
   width: 18px;
   height: min(65vh, 42rem);
   height: min(65dvh, 42rem);
 }
-.repro-minimap .line-minimap__range {
+#minimap-island .line-minimap__ticks .line-minimap__major {
+  background: var(--minimap-strong);
+}
+#minimap-island .line-minimap__ticks .line-minimap__nearest {
+  background: var(--minimap-accent);
+}
+#minimap-island .line-minimap__range {
   inset-inline-start: -22px;
   width: 40px;
 }
-.repro-minimap .line-minimap__track:has(:focus-visible) {
+#minimap-island .line-minimap__track:has(:focus-visible) {
   outline: 0;
   border-inline-start: 2px solid var(--minimap-accent);
 }
-.repro-minimap .line-minimap__guide {
+#minimap-island .line-minimap__guide {
   width: calc(100vi - 22px);
   pointer-events: none;
 }
-.repro-minimap .line-minimap__guide::before {
-  background: color-mix(in srgb, var(--minimap-accent) 24%, transparent);
+#minimap-island .line-minimap__guide::before {
+  background: color-mix(in srgb, var(--minimap-accent) 53%, transparent);
 }
-.repro-minimap .line-minimap__guide::after {
+#minimap-island .line-minimap__guide::after {
   inset: -5px auto auto -18px;
   width: 11px;
   height: 11px;
   transform: none;
   clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
-.repro-minimap .line-minimap__guide span { display: none; }
+#minimap-island .line-minimap__guide span { display: none; }
 @media (max-width: 767px) {
-  line-minimap.repro-minimap {
+  #minimap-island line-minimap {
     --minimap-minor: 10px;
     --minimap-major: 15px;
   }
-  .repro-minimap .line-minimap__ticks span {
+  #minimap-island .line-minimap__ticks span {
     transform: scaleX(min(1.4, var(--tick-scale, 1)));
   }
 }
 @media (forced-colors: active) {
-  .repro-minimap .line-minimap__ticks span,
-  .repro-minimap .line-minimap__guide::after {
+  #minimap-island .line-minimap__ticks span,
+  #minimap-island .line-minimap__ticks .line-minimap__major,
+  #minimap-island .line-minimap__ticks .line-minimap__nearest,
+  #minimap-island .line-minimap__guide::after {
     forced-color-adjust: none;
     background: CanvasText;
   }
