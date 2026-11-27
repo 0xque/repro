@@ -2,31 +2,31 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>REPRO, a project by 0xque</title><link rel="canonical" href="https://repro.querencia.art/"><meta name="description" content="A build note on REPRO, with a synthetic checkout bug and two saved test results.">
 <style>
 :root{--paper:#f6f5ef;--ink:#272b28;--quiet:#535b51;--edge:#bbbdb1;--link:#17483c;--file:#e8ece3;--code:#1d2922;--subtract:#853830;--add:#21583c;--serif:Georgia,serif;--text:"Noto Sans",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.63 var(--text)}::selection{background:#d6e5d6;color:var(--ink)}a,button,summary{color:var(--link)}a{text-underline-offset:.23em}button,summary{font:inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--link);outline-offset:4px}.wrap{width:min(680px,calc(100% - 40px));margin:auto}.mast{--ruler-width:min(86%,440px);--playhead:#a05c35;position:sticky;inset-block-start:0;z-index:2;min-height:var(--mast-height);background:var(--paper);border-bottom:1px solid var(--edge);display:grid;align-content:center}
-:root{--mast-height:49px}
-#file,#workflow,#limits{scroll-margin-block-start:calc(var(--mast-height) + 14px)}
-.mast-ruler{height:44px;display:grid;place-items:center;position:relative}
-.mast-ruler::before{content:"";position:absolute;inset-inline:0;margin:auto;width:var(--ruler-width);height:11px;top:calc(50% - 2px);background:repeating-linear-gradient(90deg,var(--edge) 0 1px,transparent 1px calc(100% / 30)) center top/100% 6px no-repeat,repeating-linear-gradient(90deg,var(--quiet) 0 1px,transparent 1px calc(100% / 6)) center top/100% 10px no-repeat;pointer-events:none}
-.mast-stops{position:absolute;inset-inline:0;margin:auto;width:var(--ruler-width);display:flex;justify-content:space-between;align-items:center;pointer-events:none}
-.mast-stops a,.mast-tick{width:1px;height:14px;position:relative;background:var(--quiet)}
-.mast-stops a::after{content:"";position:absolute;inset:-14px -13px}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.63 var(--text)}::selection{background:#d6e5d6;color:var(--ink)}a,button,summary{color:var(--link)}a{text-underline-offset:.23em}button,summary{font:inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--link);outline-offset:4px}.wrap{width:min(680px,calc(100% - 40px));margin:auto}.wrap{padding-block-start:49px}
+@media(max-width:767px){.wrap{width:min(680px,calc(100% - 64px));margin-inline-start:max(44px,calc((100% - 680px)/2))}}
+.mast{--ruler-height:min(260px,72vh);--ruler-height:min(260px,72dvh);--playhead:#a05c35;position:fixed;left:max(0px,calc((100% - 680px)/2 - 45px));top:50%;transform:translateY(-50%);z-index:2;width:40px}
+#file,#workflow,#limits{scroll-margin-block-start:24px}
+.mast-ruler{height:calc(var(--ruler-height) + 13px);display:grid;place-items:center;position:relative}
+.mast-ruler::before{content:"";position:absolute;inset-block:0;margin:auto;left:21px;height:var(--ruler-height);width:11px;background:repeating-linear-gradient(180deg,var(--edge) 0 1px,transparent 1px calc(100% / 30)) left center/6px 100% no-repeat,repeating-linear-gradient(180deg,var(--quiet) 0 1px,transparent 1px calc(100% / 6)) left center/10px 100% no-repeat;pointer-events:none}
+.mast-stops,.mast-ticks{position:absolute;inset-block:0;margin:auto;left:21px;height:var(--ruler-height);display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.mast-stops a,.mast-tick{width:14px;height:1px;position:relative;background:var(--quiet)}
+.mast-stops a::after{content:"";position:absolute;inset:-16px -4px -16px -17px}
 .mast-stops a{pointer-events:auto}
 .mast-stops a:focus-visible,.mast-stops a:hover{background:var(--link);outline:1px solid var(--link);outline-offset:2px}
-.mast-range{appearance:none;-webkit-appearance:none;position:relative;width:calc(var(--ruler-width) + 13px);height:44px;z-index:1;margin:0;background:transparent;cursor:ew-resize;touch-action:pan-y}
-.mast-range:focus-visible{outline:2px solid var(--link);outline-offset:-2px}
-.mast-range::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:22px;border:0;background:var(--playhead);clip-path:polygon(0 0,100% 0,50% 46%)}
-.mast-range::-moz-range-thumb{width:13px;height:22px;border:0;background:var(--playhead);clip-path:polygon(0 0,100% 0,50% 46%)}
+.mast-range{appearance:none;-webkit-appearance:none;writing-mode:vertical-lr;direction:ltr;position:relative;width:40px;height:100%;z-index:1;margin:0;background:transparent;cursor:ns-resize;touch-action:pan-x}
+.mast-range:focus-visible{outline:2px solid var(--link);outline-offset:-3px}
+.mast-range::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:13px;border:0;background:var(--playhead);clip-path:polygon(0 0,53% 50%,0 100%)}
+.mast-range::-moz-range-thumb{width:22px;height:13px;border:0;background:var(--playhead);clip-path:polygon(0 0,53% 50%,0 100%)}
 .mast[data-ready] .mast-stops a{visibility:hidden}
-.mast-tick{position:absolute;top:calc(50% - 2px);pointer-events:none}.mast-stops a{translate:0 4px}.mast:not([data-ready]) .mast-ticks{display:none}
-.mast-tick:first-child{left:0}.mast-tick:nth-child(2){left:33.333%}.mast-tick:nth-child(3){left:66.666%}.mast-tick:last-child{right:0}
-.mast-ticks{position:absolute;width:var(--ruler-width);inset-inline:0;inset-block:0;margin:auto;pointer-events:none}
+.mast:not([data-ready]) .mast-ticks{display:none}
+@media(forced-colors:active){.mast-tick,.mast-stops a{forced-color-adjust:none;background:CanvasText}.mast-range::-webkit-slider-thumb{forced-color-adjust:none;background:CanvasText}.mast-range::-moz-range-thumb{forced-color-adjust:none;background:CanvasText}}
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 @media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif);letter-spacing:-.045em;max-width:16ch;margin:0 0 20px}p{max-width:58ch;margin:0 0 1rem}.lede{font-size:1.035rem}.mark{background:var(--file);padding:.08em .25em}code,.bytes,.stamp{font-family:var(--mono);font-size:.88em;font-variant-numeric:tabular-nums}.capsule{margin:32px 0 24px;border-block:1px solid var(--edge)}.capsule>summary{list-style:none;min-height:62px;display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;padding:8px 0;font-family:var(--mono);font-size:clamp(.85rem,2.9vw,1rem);font-weight:550}.capsule>summary::-webkit-details-marker{display:none}.capsule>summary:hover .filename{text-decoration:underline;text-underline-offset:5px}.file-icon{width:21px;height:24px}.disclose{width:16px;height:16px;transition:transform .14s cubic-bezier(.23,1,.32,1)}.capsule[open] .disclose{transform:rotate(90deg)}.artifact{padding:0 0 22px 34px}.tree{border-left:1px solid var(--edge);list-style:none;margin:0 0 20px;padding:0 0 0 12px}.tree li{display:grid;grid-template-columns:minmax(80px,1fr) 1.4fr;gap:12px;margin:8px 0;align-items:baseline}.tree small,.small{font-size:.83rem;color:var(--quiet)}.result{margin:24px 0 0}.result h2{font-size:1rem;font-weight:650;margin:0 0 8px}.diff{display:grid;gap:2px;margin:0 0 8px}.diff code{padding:6px 12px}.diff code:first-child{background:#f0e4e0;color:var(--subtract)}.diff code:last-child{background:#e0ecdf;color:var(--add)}.command{margin:20px 0 8px;display:flex;align-items:start;gap:12px;border-top:1px dotted var(--edge);padding-top:12px}.command code{overflow-wrap:anywhere;flex:1}.command button{display:none;border:0;background:none;text-decoration:underline;text-underline-offset:4px;padding:0;font-size:.85rem}.command button.ready{display:block}.copy-state{min-height:1.1em;margin:0;color:var(--quiet);font-size:.8rem}.footer{border-top:1px solid var(--edge);padding:16px 0 28px;font-size:.82rem;color:var(--quiet)}@media(max-width:400px){main{padding-top:32px}.artifact{padding-left:12px}.tree li{gap:8px}}@media(prefers-reduced-motion:reduce){.disclose{transition:none}}
 .workflow{margin:28px 0 24px}.workflow h2{font-size:1rem;font-weight:650;margin:0 0 8px}.workflow ol{padding-inline-start:1.5rem;margin:0 0 12px}.workflow li{padding-inline-start:.2rem;margin:.25rem 0}.workflow li::marker{color:var(--quiet);font-family:var(--mono);font-size:.82em}
 </style></head><body>
 <div class="wrap" id="intro"><header class="mast"><nav aria-label="On this page">
-<div class="mast-ruler"><span class="mast-ticks" aria-hidden="true"><i class="mast-tick"></i><i class="mast-tick"></i><i class="mast-tick"></i><i class="mast-tick"></i></span><input class="mast-range" id="page-scale" type="range" min="0" max="3" step="1" value="0" aria-label="Page section" aria-valuetext="Intro" hidden>
+<div class="mast-ruler"><span class="mast-ticks" aria-hidden="true"><i class="mast-tick"></i><i class="mast-tick"></i><i class="mast-tick"></i><i class="mast-tick"></i></span><input class="mast-range" id="page-scale" type="range" min="0" max="3" step="1" value="0" aria-label="Page section" aria-orientation="vertical" aria-valuetext="Intro" hidden>
 <div class="mast-stops"><a href="#intro"><span class="visually-hidden">Intro</span></a><a href="#file"><span class="visually-hidden">File</span></a><a href="#workflow"><span class="visually-hidden">How it works</span></a><a href="#limits"><span class="visually-hidden">Limits</span></a></div></div>
 </nav></header>
 <main>
@@ -73,7 +73,7 @@ function syncFromScroll() {
     if (dragging || seeking) return;
     const {scrollHeight, clientHeight} = document.documentElement;
     const bottom = scrollHeight - clientHeight;
-    const line = mast.getBoundingClientRect().bottom + 16;
+    const line = 40;
     let index = 0;
     if (bottom > 0 && window.scrollY >= bottom - 2) index = stops.length - 1;
     else for (let i = 1; i < stops.length; i++) {
@@ -103,8 +103,7 @@ window.addEventListener('pointercancel', () => { dragging = false; syncFromScrol
 scale.addEventListener('input', () => {
   scale.setAttribute('aria-valuetext', stops[scale.valueAsNumber].name);
 });
-scale.addEventListener('change', () => {
-  const index = scale.valueAsNumber;
+function navigateTo(index) {
   const stop = stops[index];
   dragging = false;
   seeking = true;
@@ -112,6 +111,15 @@ scale.addEventListener('change', () => {
   if (location.hash !== stop.hash) history.pushState(null, '', stop.hash);
   stop.target.scrollIntoView({block:'start', behavior:motion.matches ? 'instant' : 'smooth'});
   setStop(index);
+}
+scale.addEventListener('change', () => navigateTo(scale.valueAsNumber));
+scale.addEventListener('keydown', (event) => {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  const direction = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+  if (!direction) return;
+  event.preventDefault();
+  const index = Math.max(0, Math.min(stops.length - 1, scale.valueAsNumber + direction));
+  if (index !== scale.valueAsNumber) navigateTo(index);
 });
 window.addEventListener('scroll', () => {
   if (seeking) endSeekAfter(140);
