@@ -30,6 +30,12 @@ export function mountReadingRule(ruler) {
     }
   }
 
+  function setHoverDirection(event) {
+    if (event.pointerType !== 'mouse') return;
+    const { left, width } = dot.getBoundingClientRect();
+    dot.style.setProperty('--dot-hover-direction', event.clientX < left + width / 2 ? -1 : 1);
+  }
+
   function onProofToggle() {
     if (proof.open !== defaultOpen) proofTouched = true;
     resize();
@@ -152,6 +158,7 @@ export function mountReadingRule(ruler) {
   document.fonts?.ready.then(() => {
     if (root.hasAttribute('data-reading-rule-ready')) resize();
   });
+  dot.addEventListener('pointerenter', setHoverDirection);
   proof.addEventListener('toggle', onProofToggle);
   const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(resize) : null;
   observer?.observe(article);
@@ -168,6 +175,7 @@ export function mountReadingRule(ruler) {
     viewport?.removeEventListener('resize', resize);
     viewport?.removeEventListener('scroll', resize);
     motion.removeEventListener('change', schedule);
+    dot.removeEventListener('pointerenter', setHoverDirection);
     proof.removeEventListener('toggle', onProofToggle);
     ruler.style.removeProperty('--ruler-handoff');
     ruler.style.removeProperty('--ruler-center');

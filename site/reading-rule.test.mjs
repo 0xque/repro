@@ -446,6 +446,23 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       await page.goto(url);
       const marker = page.locator('.repro-section-dot[data-positioned]');
       const ink = marker.locator('i');
+      await marker.waitFor({ state: 'visible' });
+      const box = await marker.boundingBox();
+      for (const direction of [-1, 1]) {
+        await page.mouse.move(100, 100);
+        await page.mouse.move(box.x + box.width * (direction < 0 ? .2 : .8), box.y + box.height / 2);
+        assert.equal(await marker.evaluate(dot => dot.style.getPropertyValue('--dot-hover-direction')), String(direction));
+        assert.equal(await ink.evaluate(async (dot, direction) => {
+          const animation = dot.getAnimations().find(item => item.animationName === 'repro-dot-wiggle');
+          animation.pause();
+          animation.currentTime = 110;
+          await new Promise(requestAnimationFrame);
+          const actual = Math.sign(parseFloat(getComputedStyle(dot).translate));
+          animation.finish();
+          return actual === direction;
+        }, direction), true);
+      }
+      await page.mouse.move(100, 100);
       await marker.hover();
       assert.equal(await marker.evaluate(dot => getComputedStyle(dot).color), 'rgb(178, 123, 32)');
       await ink.evaluate(async dot => {
