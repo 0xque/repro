@@ -4,22 +4,24 @@
 :root{--paper:#f6f5ef;--ink:#272b28;--quiet:#535b51;--edge:#bbbdb1;--link:#17483c;--file:#e8ece3;--code:#1d2922;--subtract:#853830;--add:#21583c;--serif:Georgia,serif;--text:"Noto Sans",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.63 var(--text)}::selection{background:#d6e5d6;color:var(--ink)}a,button,summary{color:var(--link)}a{text-underline-offset:.23em}button,summary{font:inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--link);outline-offset:4px}.wrap{width:min(680px,calc(100% - 40px));margin:auto}.wrap{padding-block-start:49px}
 @media(max-width:767px){.wrap{width:min(680px,calc(100% - 64px));margin-inline-start:max(44px,calc((100% - 680px)/2))}}
-.mast{--ruler-height:min(260px,72vh);--ruler-height:min(260px,72dvh);--playhead:#a05c35;position:fixed;left:max(0px,calc((100% - 680px)/2 - 45px));top:50%;transform:translateY(-50%);z-index:2;width:40px}
+.mast{--ruler-height:min(260px,72vh);--ruler-height:min(260px,72dvh);--playhead:#a05c35;position:fixed;left:max(0px,calc((100% - 680px)/2 - 71px));top:50%;transform:translateY(-50%);z-index:2;width:40px}
 #file,#workflow,#limits{scroll-margin-block-start:24px}
 .mast-ruler{height:calc(var(--ruler-height) + 13px);display:grid;place-items:center;position:relative}
-.mast-ruler::before{content:"";position:absolute;inset-block:0;margin:auto;left:21px;height:var(--ruler-height);width:11px;background:repeating-linear-gradient(180deg,var(--edge) 0 1px,transparent 1px calc(100% / 30)) left center/6px 100% no-repeat,repeating-linear-gradient(180deg,var(--quiet) 0 1px,transparent 1px calc(100% / 6)) left center/10px 100% no-repeat;pointer-events:none}
-.mast-stops,.mast-ticks{position:absolute;inset-block:0;margin:auto;left:21px;height:var(--ruler-height);display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
-.mast-stops a,.mast-tick{width:14px;height:1px;position:relative;background:var(--quiet)}
+.mast-ruler::before{content:"";position:absolute;inset-block:0;margin:auto;left:22px;height:var(--ruler-height);width:6px;background:repeating-linear-gradient(180deg,var(--edge) 0 1px,transparent 1px calc(100% / 24));pointer-events:none}
+.mast-stops,.mast-ticks{position:absolute;inset-block:0;margin:auto;left:22px;height:var(--ruler-height);display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.mast-stops a,.mast-tick{width:11px;height:1px;position:relative;background:var(--quiet)}
 .mast-stops a::after{content:"";position:absolute;inset:-16px -4px -16px -17px}
 .mast-stops a{pointer-events:auto}
 .mast-stops a:focus-visible,.mast-stops a:hover{background:var(--link);outline:1px solid var(--link);outline-offset:2px}
 .mast-range{appearance:none;-webkit-appearance:none;writing-mode:vertical-lr;direction:ltr;position:relative;width:40px;height:100%;z-index:1;margin:0;background:transparent;cursor:ns-resize;touch-action:pan-x}
+.mast[data-scrubbing] .mast-range{cursor:grabbing}
 .mast-range:focus-visible{outline:2px solid var(--link);outline-offset:-3px}
 .mast-range::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:13px;border:0;background:transparent}
 .mast-range::-moz-range-thumb{width:22px;height:13px;border:0;background:transparent}
 .mast-playhead{display:none;position:absolute;left:-12px;top:var(--playhead-point,0%);width:22px;height:13px;transform:translateY(-50%);background:var(--playhead);clip-path:polygon(0 0,53% 50%,0 100%);pointer-events:none}
 .mast[data-ready] .mast-playhead{display:block}
-@media(prefers-reduced-motion:no-preference){.mast-playhead{transition:top 100ms ease-out}}
+.mast[data-scrubbing] .mast-playhead{transition:none}
+@media(prefers-reduced-motion:no-preference){.mast-playhead{transition:top 155ms cubic-bezier(.22,.7,.3,1)}}
 .mast[data-ready] .mast-stops a{visibility:hidden}
 .mast:not([data-ready]) .mast-ticks{display:none}
 @media(forced-colors:active){.mast-tick,.mast-stops a,.mast-playhead{forced-color-adjust:none;background:CanvasText}}
@@ -61,15 +63,17 @@ const stops = [...document.querySelectorAll('.mast-stops a')].map((link) => ({
   hash: link.hash, name: link.textContent, target: document.getElementById(link.hash.slice(1)),
 }));
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-let dragging = false;
+let scrub = null;
 let seeking = null;
 let idleTimer;
 let frame = 0;
+let drawnStep = 0;
 function setStop(index) {
   scale.value = String(index);
   scale.setAttribute('aria-valuetext', stops[index].name);
 }
 function placePlayhead(step) {
+  drawnStep = step;
   mast.style.setProperty('--playhead-point', (100 * step / (stops.length - 1)) + '%');
 }
 function maxScrollY() {
@@ -81,10 +85,10 @@ function checkpointY(index, bottom) {
     Math.min(bottom, Math.max(0, window.scrollY + stops[index].target.getBoundingClientRect().top - 24));
 }
 function syncFromScroll() {
-  if (dragging || frame) return;
+  if (scrub?.dragging || frame) return;
   frame = requestAnimationFrame(() => {
     frame = 0;
-    if (dragging) return;
+    if (scrub?.dragging) return;
     const bottom = maxScrollY();
     if (bottom <= 2) return;
     const y = Math.min(bottom, Math.max(0, window.scrollY));
@@ -102,7 +106,7 @@ function syncFromScroll() {
 function endSeekAfter(ms) {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(() => {
-    if (seeking !== null && !dragging) placePlayhead(seeking);
+    if (seeking !== null && !scrub?.dragging) placePlayhead(seeking);
     seeking = null;
   }, ms);
 }
@@ -118,16 +122,75 @@ function syncFromHash() {
 }
 scale.hidden = false;
 mast.setAttribute('data-ready', '');
-scale.addEventListener('pointerdown', () => { dragging = true; });
-window.addEventListener('pointerup', () => { dragging = false; }, {passive:true});
-window.addEventListener('pointercancel', () => { dragging = false; syncFromScroll(); }, {passive:true});
+function stepAt(clientY, bounds) {
+  const usable = Math.max(1, bounds.height - 13);
+  const fraction = (clientY - bounds.top - 6.5) / usable;
+  return Math.min(1, Math.max(0, fraction)) * (stops.length - 1);
+}
+function drawScrub(now) {
+  if (!scrub) return;
+  scrub.frame = 0;
+  const elapsed = scrub.lastFrame === null ? 16 : Math.min(40, now - scrub.lastFrame);
+  scrub.lastFrame = now;
+  const difference = scrub.goal - scrub.step;
+  scrub.step = motion.matches || Math.abs(difference) < 0.004 ? scrub.goal :
+    scrub.step + difference * (1 - Math.exp(-elapsed / 44));
+  const index = Math.floor(scrub.step);
+  const fraction = scrub.step - index;
+  const bottom = maxScrollY();
+  const first = checkpointY(index, bottom);
+  const next = checkpointY(Math.min(stops.length - 1, index + 1), bottom);
+  const y = first + (next - first) * fraction;
+  if (Math.abs(y - window.scrollY) > 0.5) window.scrollTo({top:y, behavior:'instant'});
+  placePlayhead(scrub.step);
+  const nearest = Math.round(scrub.step);
+  if (nearest !== scale.valueAsNumber) setStop(nearest);
+  if (scrub.step !== scrub.goal) scrub.frame = requestAnimationFrame(drawScrub);
+  else scrub.lastFrame = null;
+}
+scale.addEventListener('pointerdown', (event) => {
+  if (!event.isPrimary || event.button !== 0 || scrub) return;
+  event.preventDefault();
+  const bounds = scale.getBoundingClientRect();
+  scrub = {
+    id:event.pointerId, startY:event.clientY, bounds,
+    step:drawnStep, goal:drawnStep,
+    frame:0, lastFrame:null, dragging:false,
+  };
+  scale.setPointerCapture(event.pointerId);
+  if (event.pointerType === 'mouse') scale.focus({preventScroll:true});
+});
+scale.addEventListener('pointermove', (event) => {
+  if (!scrub || event.pointerId !== scrub.id) return;
+  if (!scrub.dragging && Math.abs(event.clientY - scrub.startY) < 4) return;
+  scrub.dragging = true;
+  mast.setAttribute('data-scrubbing', '');
+  scrub.goal = stepAt(event.clientY, scrub.bounds);
+  if (!scrub.frame) scrub.frame = requestAnimationFrame(drawScrub);
+});
+function finishScrub(event, commit) {
+  if (!scrub || event.pointerId !== scrub.id) return;
+  if (scrub.frame) cancelAnimationFrame(scrub.frame);
+  const index = Math.round(stepAt(event.clientY, scrub.bounds));
+  const wasDragging = scrub.dragging;
+  scrub = null;
+  mast.removeAttribute('data-scrubbing');
+  if (commit) navigateTo(index);
+  else if (wasDragging) {
+    seeking = null;
+    clearTimeout(idleTimer);
+    if (maxScrollY() <= 2) placePlayhead(scale.valueAsNumber);
+    else syncFromScroll();
+  }
+}
+scale.addEventListener('pointerup', (event) => finishScrub(event, true));
+scale.addEventListener('pointercancel', (event) => finishScrub(event, false));
+scale.addEventListener('lostpointercapture', (event) => finishScrub(event, false));
 scale.addEventListener('input', () => {
   scale.setAttribute('aria-valuetext', stops[scale.valueAsNumber].name);
-  if (dragging) placePlayhead(scale.valueAsNumber);
 });
 function navigateTo(index) {
   const stop = stops[index];
-  dragging = false;
   seeking = index;
   endSeekAfter(400);
   if (location.hash !== stop.hash) history.pushState(null, '', stop.hash);
