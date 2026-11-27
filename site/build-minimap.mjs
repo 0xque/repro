@@ -31,4 +31,5 @@ for (const [kind, ext] of [['style', 'css'], ['script', 'js']]) {
   const raw = built.text.replace(new RegExp('</' + kind, 'gi'), (value) => value.replace('/', '\\/'));
   html = html.slice(0, a + start.length) + '\n' + raw.trimEnd() + (ext === 'js' ? '\n/*! Third-party notices\n' + notices.join('\n\n') + '\n*/' : '') + '\n' + html.slice(b);
 }
-await writeFile(page, html);
+// Dependencies can contain CRLF notices; use the same bytes the HTML parser sees.
+await writeFile(page, html.replace(/\r\n?/g, '\n'));

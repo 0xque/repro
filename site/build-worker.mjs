@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const html = await readFile(new URL('./index.html',import.meta.url),'utf8');
+// HTML parsing folds CRLF and standalone CR into LF before CSP examines inline text.
+const html = (await readFile(new URL('./index.html',import.meta.url),'utf8')).replace(/\r\n?/g, '\n');
 const digest = (value) => createHash('sha256').update(value).digest('base64');
 const [style, script] = ['style','script'].map(tag => html.match(new RegExp('<'+tag+'>([\\s\\S]*?)</'+tag+'>'))?.[1]);
 if (!style || !script) throw new Error('Missing single inline stylesheet or script');
