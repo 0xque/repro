@@ -72,22 +72,30 @@ function setStop(index) {
 function placePlayhead(step) {
   mast.style.setProperty('--playhead-point', (100 * step / (stops.length - 1)) + '%');
 }
+function maxScrollY() {
+  const {scrollHeight, clientHeight} = document.documentElement;
+  return Math.max(0, scrollHeight - clientHeight);
+}
+function checkpointY(index, bottom) {
+  return index === 0 ? 0 :
+    Math.min(bottom, Math.max(0, window.scrollY + stops[index].target.getBoundingClientRect().top - 24));
+}
 function syncFromScroll() {
   if (dragging || frame) return;
   frame = requestAnimationFrame(() => {
     frame = 0;
     if (dragging) return;
-    const {scrollHeight, clientHeight} = document.documentElement;
-    const bottom = Math.max(0, scrollHeight - clientHeight);
+    const bottom = maxScrollY();
     if (bottom <= 2) return;
     const y = Math.min(bottom, Math.max(0, window.scrollY));
-    const stopsY = stops.map(({target}, i) => i ?
-      Math.min(bottom, Math.max(0, y + target.getBoundingClientRect().top - 24)) : 0);
+    const stopsY = stops.map((_, i) => checkpointY(i, bottom));
     let index = 0;
     while (index < stopsY.length - 1 && y >= stopsY[index + 1]) index++;
     const next = stopsY[index + 1];
     const progress = next > stopsY[index] ? index + (y - stopsY[index]) / (next - stopsY[index]) : index;
-    placePlayhead(progress);
+    // Several stops may clamp to the same offset near the end of a short page.
+    // At that destination prefer the reader’s explicit choice over the last stop.
+    placePlayhead(seeking !== null && Math.abs(y - stopsY[seeking]) <= 2 ? seeking : progress);
     if (seeking === null) setStop(index);
   });
 }
@@ -123,6 +131,10 @@ function navigateTo(index) {
   seeking = index;
   endSeekAfter(400);
   if (location.hash !== stop.hash) history.pushState(null, '', stop.hash);
+  // No scroll event is emitted if the checkpoint is already at this offset.
+  // Move the marker immediately (CSS eases the change when motion is enabled).
+  const bottom = maxScrollY();
+  if (bottom <= 2 || Math.abs(checkpointY(index, bottom) - window.scrollY) <= 2) placePlayhead(index);
   stop.target.scrollIntoView({block:'start', behavior:motion.matches ? 'instant' : 'smooth'});
   setStop(index);
 }
