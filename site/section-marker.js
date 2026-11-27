@@ -17,7 +17,9 @@ export function measureMarker(article, scrollTop, height) {
     });
   const entryLine = Math.min(height * .44, (targets[1]?.y ?? Infinity) - 56);
   const first = targets.shift();
-  const points = targets.sort((a, b) => a.y - b.y).map(point => ({ ...point, at: point.y - entryLine }));
+  const points = targets.sort((a, b) => a.y - b.y).map((point, index) => ({
+    ...point, at: point.y - entryLine, direction: index % 2 ? 1 : -1,
+  }));
   return { first, points };
 }
 
@@ -41,6 +43,7 @@ export function markerAt({ first, points }, scrollTop, diameter, animated, speci
         x: mix(previous.x, point.x, ease(landing)),
         y: mix(previous.y, point.y, landing ** 2) - scrollTop - lift + diameter * (1 - scaleY) / 2,
         scaleY,
+        deformation: { phase: .52 * landing + .48 * rebound, direction: point.direction },
       };
     }
     previous = { ...point, at: specimenTarget ? specimen.end : at };
@@ -52,9 +55,9 @@ export function markerEntrance(time) {
   const t = unit(time / 530);
   if (t < .52) {
     const fall = t / .52;
-    return { offset: mix(-25, 4, fall ** 2), scaleY: mix(1, .68, ease((fall - .84) / .16)), opacity: ease(t / .16) };
+    return { offset: mix(-25, 4, fall ** 2), scaleY: mix(1, .68, ease((fall - .84) / .16)), opacity: ease(t / .16), phase: t };
   }
   const rebound = unit((t - .52) / .48);
   const lift = 9 * Math.sin(Math.PI * ease(rebound));
-  return { offset: mix(4, 0, ease(rebound)) - lift, scaleY: mix(.68, 1, ease(rebound * 4)), opacity: 1 };
+  return { offset: mix(4, 0, ease(rebound)) - lift, scaleY: mix(.68, 1, ease(rebound * 4)), opacity: 1, phase: t };
 }

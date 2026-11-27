@@ -294,6 +294,7 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
           samples.push({ scroll, y: line.top, bottom: marker.bottom, clearance: line.top - marker.bottom, border,
             railCenter: (ruler.top + ruler.bottom) / 2,
             scale: marker.height / dot.offsetHeight, docked: rule.hasAttribute('data-specimen-docked'),
+            contour: getComputedStyle(dot).clipPath,
             borderDelta: line.top - (row.bottom - border), thickness: line.height,
             markerX: marker.left + marker.width / 2,
             expectedX: row.left - 15,
@@ -313,6 +314,11 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       for (let i = 1; i < firstContact; i++) {
         assert.ok(frames[i].y >= frames[i - 1].y - .05, 'the approach line only moves downward');
       }
+      const descent = frames.slice(0, firstContact);
+      assert.ok(descent.some(frame => frame.scale > 1.55), 'the dot stretches into a falling drop');
+      assert.ok(new Set(descent.filter(frame => frame.contour !== 'none').map(frame => frame.contour)).size > 10,
+        'the falling drop changes its silhouette throughout the approach');
+
       const dockedFrames = frames.filter(frame => frame.docked);
       assert.ok(dockedFrames.length > 20);
       for (const frame of dockedFrames) {
@@ -329,6 +335,8 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       assert.ok(apex.scroll > compression.scroll && apex.clearance > settled.clearance + 7);
       near(settled.markerX, settled.expectedX, .05);
       near(settled.markerY, settled.filenameY, .05);
+      assert.notEqual(compression.contour, apex.contour);
+      assert.equal(settled.contour, 'none');
       const rebound = dockedFrames.filter(frame => frame.scroll > compression.scroll);
       for (let i = 1; i < rebound.length; i++) {
         const previous = rebound[i - 1], current = rebound[i];
@@ -340,10 +348,11 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       for (const [name, sample] of [['drop', frames[Math.floor(firstContact / 2)]],
         ['contact', compression], ['rebound', apex], ['settled', settled], ['reverse-contact', compression]]) {
         await page.evaluate(scroll => scrollTo({ top: scroll, behavior: 'instant' }), sample.scroll);
-        await page.waitForFunction(({ y, bottom }) => {
+        await page.waitForFunction(({ y, bottom, contour }) => {
           const line = document.querySelector('.repro-reading-rule').getBoundingClientRect();
-          const dot = document.querySelector('.repro-section-dot i').getBoundingClientRect();
-          return Math.abs(line.top - y) < .05 && Math.abs(dot.bottom - bottom) < .05;
+          const dot = document.querySelector('.repro-section-dot i');
+          return Math.abs(line.top - y) < .05 && Math.abs(dot.getBoundingClientRect().bottom - bottom) < .05 &&
+            getComputedStyle(dot).clipPath === contour;
         }, sample);
         if (screenshots) await page.screenshot({ path: join(screenshots, 'specimen-' + name + '.png'), scale: 'css' });
       }
@@ -387,7 +396,8 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
               y: box.top + Math.min(box.height, parseFloat(getComputedStyle(heading).lineHeight)) / 2,
             };
           });
-          samples.push({ top, x: x + width / 2, y: y + height / 2, width, height, diameter: dot.offsetHeight, markers });
+          samples.push({ top, x: x + width / 2, y: y + height / 2, width, height, diameter: dot.offsetHeight,
+            contour: getComputedStyle(dot).clipPath, markers });
         }
         return samples;
       });
@@ -397,12 +407,14 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
         const squash = frames.find(frame => onTarget(frame) && frame.height < frame.diameter * .4 &&
           Math.abs(frame.y - frame.markers[i].y) < frame.diameter / 2 && frame.width > frame.diameter * 1.5);
         assert.ok(squash, 'the dot flattens at heading ' + (i + 1));
+        assert.notEqual(squash.contour, 'none');
         const rebound = frames.find(frame => frame.top > squash.top && frame.top < squash.top + 30 &&
           onTarget(frame) && frame.y < frame.markers[i].y - 5 && frame.height > squash.height);
         const settled = frames.find(frame => frame.top > (rebound?.top ?? Infinity) && onTarget(frame) &&
           Math.abs(frame.y - frame.markers[i].y) < .1 && Math.abs(frame.height - frame.diameter) < .1);
         assert.ok(rebound, 'the dot rebounds at heading ' + (i + 1));
         assert.ok(settled, 'the dot becomes round at heading ' + (i + 1));
+        assert.ok(frames.some(frame => frame.top >= settled.top && frame.top <= settled.top + 8 && frame.contour === 'none'));
         squashes.push(squash);
       }
 
@@ -411,8 +423,9 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
           scrollTo({ top, behavior: 'instant' });
           await new Promise(requestAnimationFrame);
           await new Promise(requestAnimationFrame);
-          const { x, y, width, height } = document.querySelector('.repro-section-dot i').getBoundingClientRect();
-          return { x: x + width / 2, y: y + height / 2, width, height };
+          const dot = document.querySelector('.repro-section-dot i');
+          const { x, y, width, height } = dot.getBoundingClientRect();
+          return { x: x + width / 2, y: y + height / 2, width, height, contour: getComputedStyle(dot).clipPath };
         }, top);
       }
       for (const squash of squashes.toReversed()) {
@@ -420,6 +433,7 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
         await jump(1e6);
         const reverse = await jump(squash.top);
         for (const key of ['x', 'y', 'width', 'height']) near(reverse[key], squash[key], .05);
+        assert.equal(reverse.contour, squash.contour);
       }
       if (screenshots) {
         await jump(squashes[1].top);
@@ -432,9 +446,40 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       await jump(1e6);
       const afterScrub = await jump(squashes[1].top);
       for (const key of ['x', 'y', 'width', 'height']) near(afterScrub[key], atNewSize[key], .05);
+      assert.equal(afterScrub.contour, atNewSize.contour);
       await page.emulateMedia({ reducedMotion: 'reduce' });
       const reduced = await jump(squashes[1].top);
       near(reduced.width, reduced.height, .05);
+      assert.equal(reduced.contour, 'none');
+    } finally {
+      await page.close();
+    }
+  });
+
+  await t.test('the entrance plays even when the checkout approach starts with the first scroll', async () => {
+    const page = await browser.newPage({ viewport: { width: 1366, height: 1080 } });
+    try {
+      await page.addInitScript(() => {
+        const frames = [];
+        window.markerEntrance = new Promise(resolve => {
+          let start;
+          function record(now) {
+            const dot = document.querySelector('.repro-section-dot[data-positioned] i');
+            if (dot) {
+              start ??= now;
+              frames.push({ height: dot.getBoundingClientRect().height, contour: getComputedStyle(dot).clipPath });
+            }
+            if (start === undefined || now - start < 850) requestAnimationFrame(record);
+            else resolve(frames);
+          }
+          requestAnimationFrame(record);
+        });
+      });
+      await page.goto(url);
+      const frames = await page.evaluate(() => window.markerEntrance);
+      const settled = frames.at(-1);
+      assert.equal(settled.contour, 'none');
+      assert.ok(frames.some(frame => frame.contour !== 'none' && frame.height > settled.height * 1.45));
     } finally {
       await page.close();
     }

@@ -1,3 +1,4 @@
+import { markerShape } from './marker-shape.js';
 import { measureSpecimen, specimenSpring, specimenTiming } from './specimen-spring.js';
 import { ease, markerAt, markerEntrance, measureMarker, mix, unit } from './section-marker.js';
 
@@ -17,7 +18,7 @@ export function mountReadingRule(ruler) {
   const viewport = window.visualViewport;
   let frame = 0;
   let geometry;
-  let entranceStart;
+  let entranceClock;
   let defaultOpen = proof.open;
   let proofTouched = proof.open;
 
@@ -75,8 +76,11 @@ export function mountReadingRule(ruler) {
     const spring = timing && specimenSpring(specimen, timing, { scrollTop, rail, diameter, marker });
     rule.toggleAttribute('data-specimen-docked', !!spring?.locked);
     dot.toggleAttribute('data-specimen-spring', !!spring);
-    if (pocket.matches) entranceStart = null;
-    else paintMarker(spring?.marker ?? marker, scrollTop, now, animated, Math.min(56, timing?.start ?? 56));
+    if (pocket.matches) entranceClock = null;
+    else {
+      const entranceLimit = Math.max(16, Math.min(56, timing?.start ?? 56));
+      paintMarker(spring?.marker ?? marker, { scrollTop, now, animated, entranceLimit, floor: spring?.y });
+    }
     if (tracking && !pocket.matches) {
       const guideY = Math.max(0, Math.min(rail.top + (rail.height - 1) * reading, height - 45));
       const gutterStart = compactTab ? 5 : rail.left;
@@ -103,26 +107,44 @@ export function mountReadingRule(ruler) {
     rule.toggleAttribute('data-tracking', tracking);
   }
 
-  function paintMarker(marker, scrollTop, now, playEntrance, entranceLimit) {
+  function paintMarker(marker, { scrollTop, now, animated, entranceLimit, floor }) {
     const { left, articleTop, diameter } = geometry;
-    if (entranceStart === undefined) entranceStart = playEntrance && scrollTop < 2 ? now : null;
+    if (entranceClock === undefined) entranceClock = animated && scrollTop < 2 ? { last: now, elapsed: 0 } : null;
+    if (entranceClock && animated && scrollTop < entranceLimit) {
+      // A stalled frame must not skip the stretch and fold.
+      entranceClock.elapsed += Math.min(45, now - entranceClock.last);
+      entranceClock.last = now;
+    } else entranceClock = null;
+
     let y = marker.y;
     let scaleY = marker.scaleY;
     let opacity = 1;
-    if (entranceStart !== null && playEntrance && scrollTop < entranceLimit && now - entranceStart < 530) {
-      const entrance = markerEntrance(now - entranceStart);
+    let deformation = marker.deformation;
+    if (entranceClock && entranceClock.elapsed < 530) {
+      const entrance = markerEntrance(entranceClock.elapsed);
       const weight = 1 - ease(scrollTop / entranceLimit);
       y += entrance.offset * weight;
       scaleY *= mix(1, entrance.scaleY, weight);
       opacity = mix(1, entrance.opacity, weight);
+      if (floor !== undefined) y = Math.min(y, floor - diameter * scaleY / 2);
+      deformation = deformation
+        ? { ...deformation, phase: mix(deformation.phase, entrance.phase, weight) }
+        : { phase: entrance.phase, strength: weight };
       schedule();
-    } else entranceStart = null;
+    } else entranceClock = null;
+
+    const shape = deformation && markerShape(deformation);
+    const stretch = 1 + (shape?.stretch ?? 0);
+    const scaleX = (1 + (1 - scaleY) * .85) / Math.sqrt(stretch);
+    y -= diameter * scaleY * (stretch - 1) / 2;
+    scaleY *= stretch;
 
     dot.style.setProperty('--dot-x', marker.x - left - diameter / 2 + 'px');
     dot.style.setProperty('--dot-y', y - articleTop + scrollTop - diameter / 2 + 'px');
     dot.style.setProperty('--dot-scale-y', scaleY);
-    dot.style.setProperty('--dot-scale-x', 1 + (1 - scaleY) * .85);
-    dot.style.setProperty('--dot-radius', (50 - 30 * ease((1 - scaleY) / .76)) + '%');
+    dot.style.setProperty('--dot-scale-x', scaleX);
+    dot.style.setProperty('--dot-clip', shape?.clip ?? 'none');
+    dot.style.setProperty('--dot-radius', shape ? '0' : '50%');
     dot.style.setProperty('--dot-opacity', opacity);
     dot.setAttribute('data-positioned', '');
   }
