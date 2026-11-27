@@ -47,6 +47,7 @@ export function specimenSpring(specimen, timing, { scrollTop, rail, diameter, ma
         x: mix(marker.x, specimen.x, ease(approach)) - 8 * Math.sin(Math.PI * ease(approach)),
         y: mix(marker.y + scrollTop - start, guide - diameter / 2, drop),
         scaleY: mix(marker.scaleY, 1, ease(approach)),
+        deformation: { phase: .52 * approach },
       },
     };
   }
@@ -67,6 +68,7 @@ export function specimenSpring(specimen, timing, { scrollTop, rail, diameter, ma
       x: mix(specimen.x, marker.x, release),
       y: mix(dockedMarkerY, marker.y, release),
       scaleY: mix(scaleY, marker.scaleY, release),
+      deformation: { phase: .52 + .48 * time },
     },
   };
 }
