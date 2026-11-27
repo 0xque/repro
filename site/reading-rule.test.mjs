@@ -57,6 +57,8 @@ async function read(page) {
       x, y, width, height, left, top, ruleRight, tracked, pocket, overlaps,
       railDisplay: getComputedStyle(rail).display, railCenter: (railBox.top + railBox.bottom) / 2, viewportCenter,
       progressLine: getComputedStyle(rule, '::after').transform,
+      strokeMask: getComputedStyle(rule, '::before').maskImage,
+      markerDisplay: getComputedStyle(document.querySelector('.repro-section-dot')).display,
       inkFits: ink.left >= footer.left && ink.right <= footer.right && ink.top >= footer.top && ink.bottom <= footer.bottom,
       labelFits: Number(getComputedStyle(labelText).opacity) === 0 ||
         (labelTextRect.left >= label.left - .1 && labelTextRect.right <= label.right + .1),
@@ -83,8 +85,10 @@ async function step(page, fraction) {
   const state = await read(page);
   assert.equal(state.linkCount, 1);
   assert.equal(state.badge, 'none');
+  assert.equal(state.strokeMask, 'none', 'the reading stroke has no gap over the article');
   if (state.pocket) {
     assert.equal(state.railDisplay, 'none');
+    assert.equal(state.markerDisplay, 'none');
     if (state.tracked) {
       near(state.y, 0, .05);
       near(state.y + state.height, 44, .05);
@@ -354,6 +358,83 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
       await page.waitForSelector('[data-specimen-docked]', { state: 'attached' });
       await page.locator('#file > summary').evaluate(summary => summary.click());
       await page.waitForFunction(() => !document.querySelector('[data-specimen-spring], [data-specimen-docked]'));
+    } finally {
+      await page.close();
+    }
+  });
+
+  await t.test('the marker morphs and rebounds at each later target and retraces on a fast scrub', async () => {
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+    try {
+      await page.goto(url);
+      await page.waitForSelector('html[data-reading-rule-ready]', { state: 'attached' });
+      await page.evaluate(() => document.fonts.ready);
+      const frames = await page.evaluate(async () => {
+        const dot = document.querySelector('.repro-section-dot i');
+        const headings = [...document.querySelectorAll('.workflow h2, .field-note h2')];
+        const distance = document.scrollingElement.scrollHeight - innerHeight;
+        const samples = [];
+        for (let top = 200; top < distance; top += 4) {
+          scrollTo({ top, behavior: 'instant' });
+          await new Promise(requestAnimationFrame);
+          await new Promise(requestAnimationFrame);
+          if (dot.parentElement.hasAttribute('data-specimen-spring')) continue;
+          const { x, y, width, height } = dot.getBoundingClientRect();
+          const markers = headings.map(heading => {
+            const box = heading.getBoundingClientRect();
+            return {
+              x: box.left - 15,
+              y: box.top + Math.min(box.height, parseFloat(getComputedStyle(heading).lineHeight)) / 2,
+            };
+          });
+          samples.push({ top, x: x + width / 2, y: y + height / 2, width, height, diameter: dot.offsetHeight, markers });
+        }
+        return samples;
+      });
+      const squashes = [];
+      for (let i = 0; i < 3; i++) {
+        const onTarget = frame => Math.abs(frame.x - frame.markers[i].x) < .1;
+        const squash = frames.find(frame => onTarget(frame) && frame.height < frame.diameter * .4 &&
+          Math.abs(frame.y - frame.markers[i].y) < frame.diameter / 2 && frame.width > frame.diameter * 1.5);
+        assert.ok(squash, 'the dot flattens at heading ' + (i + 1));
+        const rebound = frames.find(frame => frame.top > squash.top && frame.top < squash.top + 30 &&
+          onTarget(frame) && frame.y < frame.markers[i].y - 5 && frame.height > squash.height);
+        const settled = frames.find(frame => frame.top > (rebound?.top ?? Infinity) && onTarget(frame) &&
+          Math.abs(frame.y - frame.markers[i].y) < .1 && Math.abs(frame.height - frame.diameter) < .1);
+        assert.ok(rebound, 'the dot rebounds at heading ' + (i + 1));
+        assert.ok(settled, 'the dot becomes round at heading ' + (i + 1));
+        squashes.push(squash);
+      }
+
+      async function jump(top) {
+        return page.evaluate(async top => {
+          scrollTo({ top, behavior: 'instant' });
+          await new Promise(requestAnimationFrame);
+          await new Promise(requestAnimationFrame);
+          const { x, y, width, height } = document.querySelector('.repro-section-dot i').getBoundingClientRect();
+          return { x: x + width / 2, y: y + height / 2, width, height };
+        }, top);
+      }
+      for (const squash of squashes.toReversed()) {
+        await jump(0);
+        await jump(1e6);
+        const reverse = await jump(squash.top);
+        for (const key of ['x', 'y', 'width', 'height']) near(reverse[key], squash[key], .05);
+      }
+      if (screenshots) {
+        await jump(squashes[1].top);
+        await page.screenshot({ path: join(screenshots, 'desktop-heading-morph.png'), scale: 'css' });
+      }
+      const resized = { width: 1024, height: 700 };
+      await page.setViewportSize(resized);
+      const atNewSize = await jump(squashes[1].top);
+      await jump(0);
+      await jump(1e6);
+      const afterScrub = await jump(squashes[1].top);
+      for (const key of ['x', 'y', 'width', 'height']) near(afterScrub[key], atNewSize[key], .05);
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      const reduced = await jump(squashes[1].top);
+      near(reduced.width, reduced.height, .05);
     } finally {
       await page.close();
     }
