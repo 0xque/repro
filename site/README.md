@@ -6,7 +6,7 @@ The build note opens a single synthetic checkout specimen and contrasts two save
 
 ## Reading ruler
 
-The article is static HTML. The only React island is the reading ruler. REPRO bundles its own copy of React and `LineMinimap` into the page; nothing is fetched at runtime. REPRO bridges the package’s seek events to the locally bundled, pinned Lenis 1.3.29 for wheel scroll and click easing. Direct ruler drag and keyboard steps stay immediate, native touch scrolling stays enabled, and reduced-motion mode uses the browser without Lenis. The animation frame runs only while easing is active. The leave-behind navigation links still lead to the article when JavaScript is disabled.
+The article is static HTML. The only React island is the reading ruler. REPRO bundles its own copy of React and `LineMinimap` into the page; nothing is fetched at runtime. REPRO bridges the package’s seek events to the locally bundled, pinned Lenis 1.3.29 for wheel scroll and click easing. Direct ruler drag and keyboard steps stay immediate, native touch scrolling stays enabled, and reduced-motion mode uses the browser without Lenis. The animation frame runs only while easing is active. The same gold rule and GitHub tab follow the ruler and dock above the wordmark at the end of the article. With reduced motion the tab docks without a glide. With JavaScript disabled, the tab is in the footer and the navigation links still lead to the article.
 
 To update the island or its theme, run from the repo root:
 
@@ -16,6 +16,15 @@ npm --prefix site run build
 ```
 
 Commit the rebuilt `site/index.html` and `site/worker.mjs` with the source change. If you only need to regenerate the Worker from committed HTML, run `node site/build-worker.mjs`; no npm install is needed for that path.
+
+The site checks use the built Worker entry point, including its actual CSP and font response. To run them and capture the reading, gliding, and docked states:
+
+```sh
+npm ci --ignore-scripts
+npx playwright install chromium
+node --test site/build-worker.test.mjs
+REPRO_SCREENSHOTS=/tmp/repro-ruler node --test site/reading-rule.test.mjs
+```
 
 The private, owner-supplied `line-minimap-react@0.1.0` is vendored as source under `vendor/line-minimap-react/` without the original archive or local-path README. Source package archive SHA-256: `52b7ee4be45f94f0a9173c6e90e7175a3152bb48800ea3696e1055b41389c518`. Package source is not distributed as a separate download or represented as open-source. Third-party React, Scheduler, and Lenis notices are bundled into the inlined JavaScript.
 
