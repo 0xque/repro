@@ -17,22 +17,27 @@ main{padding:48px 0 56px}h1{font:400 clamp(2.1rem,5.4vw,3.5rem)/1.05 var(--serif
 .repro-endmark span{display:block;white-space:nowrap;margin-block:clamp(1.5rem,4.85cqi,2.1rem);font:520 29.85cqi/.88 "REPRO Bodoni Moda",Didot,Georgia,serif;color:#29271f;transform:translate(.01em,.028em)}
 @supports(background-clip:text){.repro-endmark span{background:linear-gradient(180deg,#29271f 0 72%,#514c3d 100%);background-clip:text;color:transparent}}
 @media(forced-colors:active){.repro-endmark span{background:none;color:CanvasText}}
-/* A directional foil reflection clipped to the letterforms, never the paper. */
+/* One text clip for both states. Only the area around the pointer catches the light. */
+@property --foil-strength {
+  syntax:"<number>";
+  inherits:false;
+  initial-value:0;
+}
 @media (any-hover:hover) and (any-pointer:fine) and (prefers-reduced-motion:no-preference) and (forced-colors:none){
-  @supports (background-clip:text) and (mask-image:radial-gradient(black,transparent)){
-    .repro-endmark span::after{
-      content:"REPRO" / "";
-      position:absolute;inset:0;pointer-events:none;
-      opacity:0;transition:opacity .38s ease-out;
-      background:
-        repeating-linear-gradient(172deg,transparent 0 1px,#41230632 2px,transparent 3px 4px),
-        linear-gradient(113deg,#63420d 0%,#b38331 32%,#e2bc68 45%,#fcdf98 50%,#b3812c 59%,#775016 77%,#c79d4a 100%);
-      background-size:100% 100%,160% 100%;
-      background-position:center,var(--foil-shift,50%) center;
-      background-clip:text;color:transparent;
-      mask-image:radial-gradient(ellipse 32% 93% at var(--foil-x,50%) var(--foil-y,50%),#000 0 20%,#000d 43%,#0006 71%,transparent 100%);
+  @supports (background-clip:text) and (color:rgb(0 0 0 / calc(.5 * 1))){
+    .repro-endmark span{
+      --foil-strength:0;
+      transition:--foil-strength .32s ease-out;
+      background-image:
+        radial-gradient(ellipse 32% 93% at var(--foil-x,50%) var(--foil-y,50%),
+          rgb(224 180 87 / var(--foil-strength)) 0%,
+          rgb(207 153 55 / var(--foil-strength)) 42%,
+          rgb(188 135 43 / calc(.62 * var(--foil-strength))) 63%,
+          rgb(175 120 36 / calc(.19 * var(--foil-strength))) 82%,
+          rgb(175 120 36 / 0) 100%),
+        linear-gradient(180deg,#29271f 0 72%,#514c3d 100%);
     }
-    .repro-endmark span[data-foil]::after{opacity:1;transition-duration:.11s}
+    .repro-endmark span[data-foil]{--foil-strength:1;transition-duration:.08s}
   }
 }
 /* BEGIN GENERATED MINIMAP CSS */
@@ -77,7 +82,7 @@ if(navigator.clipboard?.writeText){copy.classList.add('ready');copy.addEventList
 (() => {
   const mark = document.querySelector('#repro-endmark span');
   const enabled = matchMedia('(any-hover:hover) and (any-pointer:fine) and (prefers-reduced-motion:no-preference) and (forced-colors:none)');
-  if (!CSS.supports('background-clip:text') || !CSS.supports('mask-image:radial-gradient(black,transparent)')) return;
+  if (!CSS.supports('background-clip:text') || !CSS.supports('color:rgb(0 0 0 / calc(.5 * 1))')) return;
   let frame = 0;
   let point;
   const clear = () => {
@@ -98,7 +103,6 @@ if(navigator.clipboard?.writeText){copy.classList.add('ready');copy.addEventList
       const y = percent((point.y - bounds.top) / bounds.height);
       mark.style.setProperty('--foil-x', x.toFixed(1) + '%');
       mark.style.setProperty('--foil-y', y.toFixed(1) + '%');
-      mark.style.setProperty('--foil-shift', (25 + x * .5).toFixed(1) + '%');
       mark.setAttribute('data-foil', '');
     });
   }, { passive:true });
