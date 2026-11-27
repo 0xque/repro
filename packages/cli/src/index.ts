@@ -21,7 +21,7 @@ const commands = {
   stop: { project: string, ...sessionArgs },
   review: { project: string, ...sessionArgs, approve: flag },
   export: { project: string, ...sessionArgs, out: string },
-  inspect: {},
+  inspect: { summary: flag },
   play: { project: string, offline: flag, approve: flag },
   verify: { project: string, offline: flag, approve: flag },
   purge: { project: string, ...sessionArgs }
@@ -35,7 +35,7 @@ const help = `REPRO · fixture-backed checkout recordings
   repro stop --project DIR [--session ID]
   repro review --project DIR --session ID [--approve]
   repro export --project DIR --session ID --out checkout.repro
-  repro inspect checkout.repro
+  repro inspect checkout.repro [--summary]
   repro play checkout.repro --project DIR --offline --approve
   repro verify checkout.repro --project DIR --offline --approve
   repro purge --project DIR [--session ID]
@@ -95,7 +95,18 @@ async function main() {
     }
     case 'inspect': {
       const { manifest, events, oracle, summary, oracleDigest } = await readCapsule(resolve(parsed.positionals[0]!));
-      print({ manifest, events, oracle, summary, oracle_sha256: oracleDigest, executed: false });
+      if (values.summary) {
+        print({
+          schema_version: manifest.schema_version,
+          validated: true,
+          event_count: events.length,
+          entry_count: manifest.attachments.length,
+          declared_entry_bytes: manifest.attachments.reduce((sum, entry) => sum + entry.bytes, 0),
+          executed: false,
+        });
+      } else {
+        print({ manifest, events, oracle, summary, oracle_sha256: oracleDigest, executed: false });
+      }
       return 0;
     }
     case 'record': {

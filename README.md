@@ -39,10 +39,12 @@ Copy the returned session UUID into `session`. Review prints the retained bytes 
 repro review --project "$work/bad" --session "$session"
 repro review --project "$work/bad" --session "$session" --approve
 repro export --project "$work/bad" --session "$session" --out "$work/checkout.repro"
-repro inspect "$work/checkout.repro" --json
+repro inspect "$work/checkout.repro" --summary --json
 repro play "$work/checkout.repro" --project "$work/bad" --offline --approve --json
 repro verify "$work/checkout.repro" --project "$work/fixed" --offline --approve --json
 ```
+
+Use `inspect --summary` to check the capsule without printing its manifest, event details, or oracle. It reports schema version, event count (including the final marker), and declared entry count and uncompressed bytes (excluding the manifest). The same validation runs as with regular `inspect`. A successful check confirms the format and contents are internally consistent; it does not authenticate the sender or run the recording. Omit `--summary` for full inspection.
 
 Add `--guided` to `record` to advance each action in the headless browser from the terminal. When it prompts to mark the failure, press Enter or run `repro stop --project "$work/bad"` from a second terminal using the same CLI. A stop before that prompt cancels the capture. If multiple guided sessions are active, pass `--session ID`. The default capture profile runs the same steps automatically.
 

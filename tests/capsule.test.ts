@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { chmod, mkdtemp, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import type { TestContext } from 'node:test';
 import { writeCapsule, readCapsule } from '../packages/capsule/src/index.js';
@@ -48,6 +50,41 @@ test('capsule round trips, remains private and refuses to replace output', async
   assert.equal((await stat(path)).mode & 0o777, 0o600);
   await assert.rejects(writeCapsule(path, manifest, entries), { code: 'EEXIST' });
   assert.equal((await readCapsule(path)).manifest.capsule_id, draft.id);
+});
+
+test('inspect summary validates offline, emits only aggregate metadata and preserves full inspection', async (t) => {
+  const root = await temp(t);
+  const path = join(root, 'checkout.repro');
+  const { draft, manifest } = fixture();
+  const entries = sanitizedFiles(draft);
+  await writeCapsule(path, manifest, entries);
+  const cli = fileURLToPath(new URL('../packages/cli/src/index.js', import.meta.url));
+  const run = (...args: string[]) => spawnSync(process.execPath, [cli, ...args], {
+    cwd: root, env: { PATH: root }, encoding: 'utf8', timeout: 5000,
+  });
+  const concise = run('inspect', path, '--summary', '--json');
+  assert.equal(concise.status, 0, concise.stderr);
+  assert.deepEqual(JSON.parse(concise.stdout), {
+    schema_version: manifest.schema_version,
+    validated: true,
+    event_count: draft.events.length,
+    entry_count: entries.size,
+    declared_entry_bytes: [...entries.values()].reduce((sum, entry) => sum + entry.length, 0),
+    executed: false,
+  });
+  const full = run('inspect', path, '--json');
+  assert.equal(full.status, 0, full.stderr);
+  const fullResult = JSON.parse(full.stdout);
+  assert.deepEqual(fullResult.events, draft.events);
+  assert.equal(fullResult.manifest.capsule_id, draft.id);
+  assert.equal(fullResult.executed, false);
+
+  const damaged = join(root, 'damaged.repro');
+  await writeFile(damaged, (await readFile(path)).subarray(0, -1));
+  const rejected = run('inspect', damaged, '--summary', '--json');
+  assert.ok(rejected.status !== null && rejected.status !== 0);
+  assert.equal(rejected.stdout, '');
+  assert.equal(JSON.parse(rejected.stderr).status, 'ERROR');
 });
 
 test('capsule rejects unsupported versions, unknown fields and missing integrity declarations', async (t) => {
