@@ -18,3 +18,13 @@ npm --prefix site run build
 Commit the rebuilt `site/index.html` and `site/worker.mjs` with the source change. If you only need to regenerate the Worker from committed HTML, run `node site/build-worker.mjs`; no npm install is needed for that path.
 
 The private, owner-supplied `line-minimap-react@0.1.0` is vendored as source under `vendor/line-minimap-react/` without the original archive or local-path README. Source package archive SHA-256: `52b7ee4be45f94f0a9173c6e90e7175a3152bb48800ea3696e1055b41389c518`. Package source is not distributed as a separate download or represented as open-source. Third-party React, Scheduler, and Lenis notices are bundled into the inlined JavaScript.
+
+## Footer endmark (off by default)
+
+The Harmond SemiBold Condensed endmark has no checked-in font and is hidden in the standard build. Do not use the free/demo download: verify with [Dirtyline Studio](https://dirtylinestudio.com/pages/license) that the acquired license covers self-hosted web embedding and use as a branded wordmark. No font should be added to the repository. When the appropriately licensed, unmodified WOFF2 is available, generate an explicitly separate build:
+
+```sh
+REPRO_ENDMARK_LICENSED_WOFF2=/absolute/path/to/licensed-harmond.woff2 node site/build-worker.mjs
+```
+
+The result is `site/.build/worker-with-endmark.mjs` (ignored by Git), not the tracked Worker. The document reveals the mark only after the embedded face loads successfully. A regular build stays disabled and needs no font request. Review any enabled build before authorizing it for publication.
