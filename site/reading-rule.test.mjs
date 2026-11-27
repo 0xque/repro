@@ -440,6 +440,31 @@ test('Worker entry point keeps one operable tab attached through the reading-rul
     }
   });
 
+  await t.test('hover wiggles the marker once and reduced motion keeps the color response', async () => {
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+    try {
+      await page.goto(url);
+      const marker = page.locator('.repro-section-dot[data-positioned]');
+      const ink = marker.locator('i');
+      await marker.hover();
+      assert.equal(await marker.evaluate(dot => getComputedStyle(dot).color), 'rgb(178, 123, 32)');
+      await ink.evaluate(async dot => {
+        const wiggle = dot.getAnimations().find(animation => animation.animationName === 'repro-dot-wiggle');
+        if (!wiggle) throw Error('The pointer did not trigger the wiggle');
+        await wiggle.finished;
+      });
+      assert.equal(await ink.evaluate(dot => dot.getAnimations().length), 0);
+      await page.mouse.move(100, 100);
+      assert.equal(await marker.evaluate(dot => getComputedStyle(dot).color), 'rgb(161, 109, 23)');
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await marker.hover();
+      assert.equal(await marker.evaluate(dot => getComputedStyle(dot).color), 'rgb(178, 123, 32)');
+      assert.equal(await ink.evaluate(dot => getComputedStyle(dot).animationName), 'none');
+    } finally {
+      await page.close();
+    }
+  });
+
   await t.test('reduced motion and no-script footer', async () => {
     const reduced = await browser.newPage({ reducedMotion: 'reduce', viewport: { width: 390, height: 844 } });
     await reduced.goto(url);
